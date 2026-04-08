@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vision-mcp": {
+      "command": "node",
+      "args": ["packages/vision-mcp/index.js"],
+      "description": "Camera tools for physical world perception — capture photos from iPhone or webcam for hardware inspection"
+    }
+  }
+}

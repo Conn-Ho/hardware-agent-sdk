@@ -1,0 +1,16 @@
+{
+  "name": "@hardware-agent-sdk/vision-mcp",
+  "version": "0.1.0",
+  "description": "MCP server — connect a camera to the hardware agent for physical world perception",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "vision-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
