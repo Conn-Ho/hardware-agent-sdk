@@ -1,0 +1,27 @@
+{
+  "name": "@hardware-agent-sdk/cad-ui",
+  "version": "0.1.0",
+  "description": "Web UI for cad-skill — chat-driven 3D CAD generation",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"node server.js\" \"vite --port 5174\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "concurrently": "^9.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "three": "^0.167.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "vite": "^5.4.8"
+  }
+}

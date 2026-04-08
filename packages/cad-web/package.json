@@ -1,0 +1,13 @@
+{
+  "name": "@hardware-agent-sdk/cad-web",
+  "version": "0.1.0",
+  "description": "Web UI for cad-skill — chat interface + Three.js 3D viewer",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.0"
+  }
+}

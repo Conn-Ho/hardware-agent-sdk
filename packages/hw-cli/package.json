@@ -1,0 +1,22 @@
+{
+  "name": "@hardware-agent-sdk/hw-cli",
+  "version": "0.1.0",
+  "description": "CLI for hardware component search, price comparison, and BOM resolution across Chinese electronics suppliers",
+  "bin": {
+    "hw-cli": "./bin/hw-cli.js"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "node bin/hw-cli.js",
+    "link": "npm link"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

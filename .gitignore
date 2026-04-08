@@ -1,0 +1,8 @@
+ai-config.json
+packages/cad-web/output/
+node_modules/
+*.pyc
+__pycache__/
+packages/cad-skill/output/
+packages/cad-web/output/
+packages/cad-web/public/vendor/

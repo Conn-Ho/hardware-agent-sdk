@@ -1,0 +1,19 @@
+{
+  "name": "@hardware-agent-sdk/cad-skill",
+  "version": "0.1.0",
+  "description": "CAD code generation loop for AI agents — Build123d + Docker + vision feedback",
+  "type": "module",
+  "bin": {
+    "cad-skill": "./bin/cad-skill.js"
+  },
+  "main": "./src/index.js",
+  "scripts": {
+    "build-docker": "docker build -t hardware-sdk-cad ./docker",
+    "test": "node bin/cad-skill.js generate 'a 40x30x15mm box with rounded corners and a USB-C slot on one side'"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  }
+}

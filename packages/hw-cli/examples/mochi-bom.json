@@ -1,0 +1,6 @@
+[
+  { "name": "主控板",   "query": "ESP32-C3 Super Mini", "qty": 1 },
+  { "name": "显示屏",   "query": "ST7789 1.54 inch LCD", "qty": 1 },
+  { "name": "排针",     "query": "2.54mm pin header 4pin", "qty": 2 },
+  { "name": "M2螺丝",   "query": "M2 screw 6mm", "qty": 4 }
+]
