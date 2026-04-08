@@ -14,15 +14,12 @@ import { fileURLToPath } from 'node:url'
 import { FirmwareLoop, autoDetect } from '../src/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const pkg = JSON.parse(
-  createRequire(import.meta.url)('../package.json', { assert: { type: 'json' } }) ??
-  '{"version":"0.1.0"}'
-)
+const pkg = createRequire(import.meta.url)('../package.json')
 
 program
   .name('fw-loop')
   .description('Autonomous firmware compile → flash → monitor → AI-fix loop')
-  .version('0.1.0')
+  .version(pkg.version ?? '0.1.0')
   .argument('[sketch-dir]', 'Path to sketch directory (defaults to cwd)')
   .option('--fqbn <fqbn>',       'Board FQBN, e.g. esp32:esp32:esp32c3')
   .option('--port <port>',       'Serial port, e.g. /dev/tty.usbmodem12301')

@@ -1297,10 +1297,10 @@ try {
   ;(function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera) })()
 
   if (sessionId) setTimeout(async () => {
-    // Only load STL if the file actually exists (meta shows hasStl or direct check)
+    // Only load STL if asset exists — avoids 404 console noise
     try {
-      const meta = await fetch(`/api/model/${sessionId}/meta`).then(r => r.ok ? r.json() : null)
-      if (meta?.code) loadSTL(sessionId)
+      const assets = await fetch('/api/assets').then(r => r.json())
+      if (assets.some(a => a.id === sessionId && a.hasStl)) loadSTL(sessionId)
     } catch {}
   }, 200)
 } catch(e) {
@@ -1984,8 +1984,9 @@ window.newSession = () => {
   document.getElementById('project-results').innerHTML = '<div style="padding:20px 14px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.7">在右侧对话框描述你的项目需求<br>Claude 将自动规划并推荐硬件</div>'
   document.getElementById('project-cad-btn').disabled = true
   updateStageBar('requirements')
-  // Reset BOM to new (empty) session
-  loadBOM()
+  // New session = empty BOM (don't load from default, which may have stale items)
+  bomItems = []
+  renderBOM()
 }
 
 loadSessions()
@@ -2185,7 +2186,7 @@ function normalizeBOMName(name) {
     .replace(/传感器|sensor/g, 'sensor')
     .replace(/电源|power\s*supply/g, 'power')
     .replace(/电池|battery/g, 'battery')
-    .replace(/[×x*\s_\-–—]+/g, ' ')
+    .replace(/[×*\s_\-–—]+/g, ' ')
     .trim()
 }
 
@@ -2195,11 +2196,12 @@ function findBOMIndex(name) {
   return bomItems.findIndex(b => normalizeBOMName(b.name) === norm)
 }
 
-// Add or merge an item into BOM. Increments qty if duplicate.
+// Add or merge an item into BOM.
+// If duplicate: take the higher qty (agent re-adding same item keeps user-set qty).
 function mergeBOMItem(item) {
   const idx = findBOMIndex(item.name)
   if (idx !== -1) {
-    bomItems[idx].qty = (bomItems[idx].qty || 1) + (item.qty || 1) - 1
+    bomItems[idx].qty = Math.max(bomItems[idx].qty || 1, item.qty || 1)
     // Prefer the more descriptive name
     if (item.name.length > bomItems[idx].name.length) bomItems[idx].name = item.name
   } else {
