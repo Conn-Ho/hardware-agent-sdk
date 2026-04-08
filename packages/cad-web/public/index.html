@@ -2123,6 +2123,7 @@ function renderProjectResults(data) {
             <button class="hw-add-btn" id="hw-add-${i}" onclick="addHwToBOM(${i})">+ 加入 BOM</button>
             <a class="hw-lcsc-btn" href="https://search.jd.com/Search?keyword=${encodeURIComponent(hw.search || hw.name)}" target="_blank">京东 ↗</a>
             <a class="hw-lcsc-btn" href="https://s.taobao.com/search?q=${encodeURIComponent(hw.search || hw.name)}" target="_blank">淘宝 ↗</a>
+            <a class="hw-lcsc-btn" href="https://www.dfrobot.com.cn/search_elastic.php?keywords=${encodeURIComponent(hw.search || hw.name)}" target="_blank">DFRobot ↗</a>
           </div>
         </div>
       `).join('')}
@@ -2210,13 +2211,15 @@ function mergeBOMItem(item) {
 }
 
 // Generate shopping links for a component name (Chinese market first)
+// waveshare.net has no browsable search URL — link to their shop with kw param (JS-driven)
 function shoppingLinks(name) {
   const q = encodeURIComponent(name)
   return [
-    { label: '京东', url: `https://search.jd.com/Search?keyword=${q}` },
-    { label: '淘宝', url: `https://s.taobao.com/search?q=${q}` },
-    { label: '立创', url: `https://www.lcsc.com/search?q=${q}` },
-    { label: '微雪', url: `https://www.waveshare.net/catalogsearch/result/?q=${q}` },
+    { label: '京东',    url: `https://search.jd.com/Search?keyword=${q}` },
+    { label: '淘宝',    url: `https://s.taobao.com/search?q=${q}` },
+    { label: 'DFRobot', url: `https://www.dfrobot.com.cn/search_elastic.php?keywords=${q}` },
+    { label: '微雪',    url: `https://www.waveshare.net/shop/?kw=${q}` },
+    { label: '立创',    url: `https://www.lcsc.com/search?q=${q}` },
   ]
 }
 

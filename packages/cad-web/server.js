@@ -73,6 +73,7 @@ async function writeAiConfig(cfg) {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(cfg, null, 2))
 }
 
+app.get('/favicon.ico', (_req, res) => res.status(204).end())
 app.get('/api/providers',  (_req, res) => res.json(PROVIDERS))
 
 app.get('/api/ai-config', async (_req, res) => {
@@ -408,7 +409,7 @@ const HARDWARE_TOOLS = [
   },
   {
     name: 'ask_user_assessment',
-    description: 'Show the user an interactive questionnaire with clickable options. Use this at the start of EVERY new project to collect: soldering skill, camera availability, 3D printer access, dev environment preference, and project-specific details. DO NOT ask questions as plain text — always use this tool.',
+    description: 'Show the user an interactive questionnaire with clickable option buttons. Use this (1) at the start of every new project for the standard assessment AND (2) any time you need the user to choose between options (confirm BOM, choose a component variant, pick a design direction, etc.). NEVER present choices as plain text — always use this tool for any multi-choice question.',
     input_schema: {
       type: 'object',
       properties: {
@@ -529,8 +530,10 @@ After ask_user_assessment returns, output a brief confirmation text and STOP. Do
 
 ### Stage 2: Component Selection (search_component → add_to_bom)
 - Trigger: requirements exist, BOM is empty or incomplete
-- Action: search then add — respect the soldering skill level when choosing parts
+- Action: call search_component for EACH component, then add_to_bom — respect soldering skill
 - Always prefer dev boards / breakout modules over bare ICs
+- If you need user to confirm or choose between options: use ask_user_assessment (NOT plain text)
+- NEVER list component recommendations as plain text — always go through the tools
 - Advances to: cad
 
 ### Stage 3: Mechanical Design (generate_cad_model)
@@ -560,6 +563,8 @@ After ask_user_assessment returns, output a brief confirmation text and STOP. Do
 4. **Always progress stages in order** unless user explicitly asks to skip
 5. **State awareness** — check current state before every action, don't repeat completed work
 6. **search before add** — always search_component before add_to_bom
+7. **NEVER ask questions as plain text** — any time you need user to choose, use ask_user_assessment with clickable options. This is mandatory, no exceptions.
+8. **ALWAYS use tools** — never give component recommendations as plain text. Use search_component → add_to_bom for every component. Never skip tool calls.
 
 ## Hardware Reference
 - ESP32-C3 Super Mini: 22.52×18mm, USB-C, no-solder friendly with pin headers
@@ -675,32 +680,50 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
     }
 
     case 'search_component': {
-      // Use real LCSC API
+      // Search DFRobot first (dev boards/modules), fallback to LCSC (chips/components)
+      const q = toolInput.query
+      const allResults = []
+      const errors = []
+
+      // DFRobot — best for dev boards, sensors, kits (Chinese CNY prices)
       try {
-        const { search } = await import('../hw-cli/src/adapters/lcsc.js')
-        const result = await search(toolInput.query, { pageSize: 5 })
-        const top = result.results.slice(0, 3).map(r => ({
-          name: r.name,
-          partNumber: r.partNumber,
-          price: r.price,
-          stock: r.stock,
-          package: r.package,
-          url: r.url,
-        }))
-        sendEvent({ type: 'component_search', query: toolInput.query, results: top })
+        const { search: dfSearch } = await import('../hw-cli/src/adapters/dfrobot.js')
+        const df = await dfSearch(q, { pageSize: 5 })
+        allResults.push(...df.results.slice(0, 3).map(r => ({
+          name: r.name, partNumber: r.partNumber, price: r.price,
+          currency: 'CNY', source: 'DFRobot', url: r.url,
+        })))
+      } catch (e) { errors.push(`DFRobot: ${e.message}`) }
+
+      // LCSC — best for chips, passives, modules
+      try {
+        const { search: lcscSearch } = await import('../hw-cli/src/adapters/lcsc.js')
+        const lc = await lcscSearch(q, { pageSize: 5 })
+        allResults.push(...lc.results.slice(0, 3).map(r => ({
+          name: r.name, partNumber: r.partNumber, price: r.price,
+          currency: 'USD', stock: r.stock, source: 'LCSC', url: r.url,
+        })))
+      } catch (e) { errors.push(`LCSC: ${e.message}`) }
+
+      const top = allResults.slice(0, 5)
+      sendEvent({ type: 'component_search', query: q, results: top })
+
+      if (top.length) {
+        const best = top[0]
         return {
-          ok: true,
-          query: toolInput.query,
-          results: top,
-          message: top.length
-            ? `Found ${top.length} results for "${toolInput.query}". Top: ${top[0].name} (${top[0].partNumber}) $${top[0].price ?? 'N/A'}`
-            : `No results found for "${toolInput.query}" on LCSC.`
+          ok: true, query: q, results: top,
+          message: `找到 ${top.length} 个结果 "${q}"。最佳: ${best.name} (${best.source}) ¥${best.price ?? 'N/A'}`,
         }
-      } catch (e) {
-        const url = `https://www.lcsc.com/search?q=${encodeURIComponent(toolInput.query)}`
-        sendEvent({ type: 'lcsc_search', query: toolInput.query, url })
-        return { ok: true, lcsc_url: url, message: `LCSC search URL generated (live search unavailable: ${e.message})` }
       }
+      // All searches failed — return shopping URLs as fallback
+      const fallbackUrls = {
+        jd:      `https://search.jd.com/Search?keyword=${encodeURIComponent(q)}`,
+        taobao:  `https://s.taobao.com/search?q=${encodeURIComponent(q)}`,
+        dfrobot: `https://www.dfrobot.com.cn/search_elastic.php?keywords=${encodeURIComponent(q)}`,
+        lcsc:    `https://www.lcsc.com/search?q=${encodeURIComponent(q)}`,
+      }
+      sendEvent({ type: 'component_search', query: q, results: [], fallbackUrls })
+      return { ok: true, query: q, results: [], fallbackUrls, message: `未能实时搜索 (${errors.join('; ')})，已返回购物链接。` }
     }
 
     case 'ask_user_assessment': {
@@ -763,14 +786,13 @@ function callClaudeCLI(userMessage, appendSystemPrompt, timeoutMs = 300_000) {
     delete env.CLAUDECODE
 
     const child = spawn('claude', [
-      '-p', '--output-format', 'stream-json', '--verbose',
+      '-p', '--output-format', 'text',
       '--append-system-prompt', appendSystemPrompt,
     ], { env })
     childProcs.add(child)
     child.on('close', () => childProcs.delete(child))
 
-    const events = []
-    let buf = ''
+    let stdout = '', stderr = ''
     child.stdin.write(userMessage)
     child.stdin.end()
 
@@ -779,24 +801,42 @@ function callClaudeCLI(userMessage, appendSystemPrompt, timeoutMs = 300_000) {
       reject(new Error(`Agent claude -p timed out after ${timeoutMs / 1000}s`))
     }, timeoutMs)
 
-    child.stdout.on('data', d => {
-      buf += d.toString()
-      const lines = buf.split('\n'); buf = lines.pop()
-      for (const line of lines) {
-        if (!line.trim()) continue
-        try { events.push(JSON.parse(line)) } catch {}
-      }
-    })
-    child.on('close', () => {
+    child.stdout.on('data', d => { stdout += d })
+    child.stderr.on('data', d => { stderr += d })
+    child.on('close', code => {
       clearTimeout(timer)
-      const resultEvt = events.find(e => e.type === 'result')
-      resolve({
-        text:    resultEvt?.result ?? '',
-        isError: resultEvt?.is_error ?? false,
-      })
+      resolve({ text: stdout.trim(), isError: code !== 0 })
     })
     child.on('error', err => { clearTimeout(timer); reject(new Error(`claude spawn: ${err.message}`)) })
   })
+}
+
+async function callAgentAPI(userMessage, systemPrompt, cfg) {
+  const url = (cfg.baseUrl || 'http://localhost:11434') + '/v1/chat/completions'
+  const msgs = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user',   content: userMessage },
+  ]
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model:      cfg.model || 'claude-sonnet-4-5',
+      messages:   msgs,
+      max_tokens: 4096,
+    }),
+    signal: AbortSignal.timeout(120_000),
+  })
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '')
+    throw new Error(`API ${res.status}: ${txt.slice(0, 200)}`)
+  }
+  const data = await res.json()
+  const text = data.choices?.[0]?.message?.content?.trim() ?? ''
+  return { text, isError: false }
 }
 
 app.post('/api/agent', async (req, res) => {
@@ -845,13 +885,17 @@ ${formatToolsBlock()}`
     }
     let userInput = ctx ? `${ctx}Human: ${message.trim()}` : message.trim()
 
-    emit({ type: 'log', text: '正在启动 Claude Agent…' })
+    const agentCfg = await readAiConfig()
+    const useAPI = agentCfg.provider !== 'claude-cli' && agentCfg.apiKey
+    emit({ type: 'log', text: `正在启动 Agent… (${agentCfg.provider})` })
 
     for (let iter = 0; iter < 12; iter++) {
       emit({ type: 'log', text: `思考中… (第 ${iter + 1} 轮)` })
-      console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — calling claude -p`)
+      console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — calling ${useAPI ? agentCfg.provider + ' API' : 'claude -p'}`)
 
-      const resp = await callClaudeCLI(userInput, sysPrompt)
+      const resp = useAPI
+        ? await callAgentAPI(userInput, sysPrompt, agentCfg)
+        : await callClaudeCLI(userInput, sysPrompt)
       console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — response len=${resp.text?.length} isError=${resp.isError}`)
       console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — text: ${resp.text?.slice(0, 300)}`)
 
@@ -873,8 +917,11 @@ ${formatToolsBlock()}`
       // Parse and execute tool call
       const jsonStr = text.slice(tcStart + TC_OPEN.length, tcEnd).trim()
       let toolCall
-      try { toolCall = JSON.parse(jsonStr) }
-      catch { emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 100)}` }); break }
+      try {
+        // Claude sometimes puts literal newlines inside JSON strings — escape them
+        const fixedJson = jsonStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+        toolCall = JSON.parse(fixedJson)
+      } catch { emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 100)}` }); break }
 
       emit({ type: 'tool_call', tool: toolCall.name, input: toolCall.input })
 

@@ -1,9 +1,11 @@
 import { search as waveshareSearch } from './waveshare.js'
-import { search as lcscSearch } from './lcsc.js'
+import { search as lcscSearch }     from './lcsc.js'
+import { search as dfrobotSearch }  from './dfrobot.js'
 
 export const SOURCES = {
-  waveshare: { search: waveshareSearch, label: 'Waveshare 微雪', currency: 'CNY' },
-  lcsc:      { search: lcscSearch,      label: 'LCSC 立创',      currency: 'USD' },
+  waveshare: { search: waveshareSearch, label: 'Waveshare 微雪',   currency: 'CNY' },
+  lcsc:      { search: lcscSearch,      label: 'LCSC 立创',         currency: 'USD' },
+  dfrobot:   { search: dfrobotSearch,   label: 'DFRobot 创客商城',  currency: 'CNY' },
 }
 
 export async function searchAll(keyword, sources, opts = {}) {
