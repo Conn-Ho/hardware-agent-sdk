@@ -68,15 +68,6 @@ async function readAiConfig() {
   catch { return defaultConfig() }
 }
 
-// CAD generation always uses Gemini (fast, vision-capable, no rate limit headaches)
-function cadAiConfig(mainCfg) {
-  const key = mainCfg.cadApiKey || mainCfg.apiKey || process.env.GEMINI_API_KEY || ''
-  return {
-    provider: 'gemini',
-    model:    mainCfg.cadModel || 'gemini-2.0-flash',
-    apiKey:   key,
-  }
-}
 
 async function writeAiConfig(cfg) {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(cfg, null, 2))
@@ -392,13 +383,13 @@ const HARDWARE_TOOLS = [
   },
   {
     name: 'generate_cad_model',
-    description: 'Generate a 3D printable OpenSCAD model. Use this for enclosures, brackets, mounts, and any custom mechanical part. The result appears in the 3D viewer.',
+    description: 'Generate and display a 3D printable OpenSCAD model. Pass a detailed description including all dimensions and features. The server will generate and execute the code.',
     input_schema: {
       type: 'object',
       properties: {
         description: {
           type: 'string',
-          description: 'Full description of the part: dimensions, features, fit requirements, what it houses/attaches to.'
+          description: 'Detailed description: part type, exact dimensions (mm), features (holes, slots, connectors), what components it houses, fit tolerances needed.'
         }
       },
       required: ['description']
@@ -544,14 +535,23 @@ After ask_user_assessment returns, output a brief confirmation text and STOP. Do
 
 ### Stage 3: Mechanical Design (generate_cad_model)
 - Trigger: BOM confirmed, user wants enclosure/mount/bracket
-- Action: generate_cad_model with exact dimensions from selected boards/modules
+- Action: call generate_cad_model with a detailed description (dimensions, features, components housed)
+- The server handles code generation and execution automatically
 - Advances to: firmware
 
-### Stage 4: Firmware [NOT YET AVAILABLE]
-- Acknowledge, explain what the firmware will do, list the libraries needed
+### Stage 4: Firmware
+- Trigger: CAD complete, user wants firmware
+- Action: Write a complete starter .ino sketch — pin definitions matching BOM modules, initialization, main loop
+- Tell user: save the .ino, then run: npx fw-loop --detect  (detects board+port), then fw-loop (auto compile/flash/debug)
+- Advances to: assembly
 
-### Stage 5: PCB Design [NOT YET AVAILABLE]
-### Stage 6: Assembly [NOT YET AVAILABLE]
+### Stage 5: Assembly
+- Trigger: firmware flashed, user wants assembly help
+- Action: List step-by-step assembly order, reference 3D viewer for enclosure fit
+- Tell user: open /viewer.html?id=<sessionId> for interactive 3D view
+- Advances to: complete
+
+### Stage 6: PCB Design [NOT YET AVAILABLE]
 
 ## Hard Rules
 1. **Phase 0 first** — never skip user assessment on a new project (stage = requirements AND no summary)
@@ -612,55 +612,49 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
 
     case 'generate_cad_model': {
       const outputDir = path.join(OUTPUT_BASE, sessionId)
-      let loop = sessions.get(sessionId)
+
+      // Step 1: Dedicated, fresh-context code generation (no agent history = fast)
+      sendEvent({ type: 'log', text: '🎨 生成 OpenSCAD 代码…' })
+      const { aiPrompt } = await import('../cad-skill/src/ai-client.js')
+      const { CODE_GEN_PROMPT } = await import('../cad-skill/src/prompts.js')
       const mainCfg = await readAiConfig()
-      const cadCfg  = cadAiConfig(mainCfg)
-
-      // Periodic progress ticker — only fires if no onProgress in last 20s
-      let cadStep = 'starting'
-      let lastProgressAt = Date.now()
-      const cadStart = Date.now()
-      const ticker = setInterval(() => {
-        if (Date.now() - lastProgressAt >= 19_000) {
-          const elapsed = Math.round((Date.now() - cadStart) / 1000)
-          sendEvent({ type: 'log', text: `⏳ ${cadStep}… (已等待 ${elapsed}s)` })
-        }
-      }, 20_000)
-
-      const onProg = (msg) => {
-        cadStep = msg
-        lastProgressAt = Date.now()
-        sendEvent({ type: 'log', text: msg })
-      }
-
-      if (!loop) {
-        loop = new CadLoop({
-          outputDir, verbose: false,
-          provider: cadCfg.provider, model: cadCfg.model,
-          baseUrl: cadCfg.baseUrl, apiKey: cadCfg.apiKey,
-          onProgress: onProg,
-          onCode:     (code) => sendEvent({ type: 'code', code }),
-        })
-        sessions.set(sessionId, loop)
-      } else {
-        loop.onProgress = onProg
-        loop.onCode     = (code) => sendEvent({ type: 'code', code })
-        loop.aiOpts = { provider: cadCfg.provider, model: cadCfg.model, baseUrl: cadCfg.baseUrl, apiKey: cadCfg.apiKey }
-      }
-
-      let cadResult
+      let code
       try {
-        cadResult = await loop.generate(
-          toolInput.description,
-          state._imageBase64   || null,
-          state._imageMimeType || null,
-        )
-      } finally {
-        clearInterval(ticker)
+        code = await aiPrompt(toolInput.description, {
+          systemPrompt: CODE_GEN_PROMPT,
+          provider:     mainCfg.provider,
+          model:        mainCfg.model,
+          baseUrl:      mainCfg.baseUrl,
+          apiKey:       mainCfg.apiKey,
+          imageBase64:  state._imageBase64   || undefined,
+          imageMimeType: state._imageMimeType || undefined,
+        })
+        // Strip markdown fences if model wrapped it
+        code = code.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
+      } catch (e) {
+        return { ok: false, error: e.message, message: `Code generation failed: ${e.message}` }
       }
-      const { code, result, rounds, renderPaths } = cadResult
+
+      sendEvent({ type: 'code', code })
+      sendEvent({ type: 'log', text: '▶ 执行 OpenSCAD…' })
+
+      const result = await executeCadCode(code)
+
       if (result.success) {
-        try { await loop.export('stl', 'model') } catch {}
+        await fs.mkdir(outputDir, { recursive: true })
+        // Save STL
+        const stlB64 = result.exports?.stl_b64
+        if (stlB64) {
+          await fs.writeFile(path.join(outputDir, 'model.stl'), Buffer.from(stlB64, 'base64'))
+        }
+        // Save renders
+        const renderPaths = {}
+        for (const [view, b64] of Object.entries(result.renders || {})) {
+          if (typeof b64 !== 'string') continue
+          const fp = path.join(outputDir, `model_${view}.png`)
+          await fs.writeFile(fp, Buffer.from(b64, 'base64'))
+          renderPaths[view] = fp
+        }
         // Update project state
         state.cad = { generated: true, description: toolInput.description, metrics: result.metrics ?? {} }
         if (state.stage === 'cad') state.stage = 'firmware'
@@ -669,15 +663,15 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
         const meta = {
           id: sessionId, description: toolInput.description, timestamp: Date.now(),
           metrics: result.metrics ?? {}, printability: result.printability ?? {},
-          code: code ?? '', renders: Object.keys(renderPaths),
+          code, renders: Object.keys(renderPaths),
         }
-        await fs.mkdir(outputDir, { recursive: true })
         await fs.writeFile(path.join(outputDir, 'meta.json'), JSON.stringify(meta, null, 2))
-        sendEvent({ type: 'cad_update', sessionId, rounds, metrics: result.metrics ?? {}, printability: result.printability ?? {}, renderViews: Object.keys(renderPaths) })
+        sendEvent({ type: 'cad_update', sessionId, rounds: 1, metrics: result.metrics ?? {}, printability: result.printability ?? {}, renderViews: Object.keys(renderPaths) })
         sendEvent({ type: 'stage_update', stage: state.stage, state })
-        return { ok: true, rounds, metrics: result.metrics, message: `3D model generated in ${rounds} round(s). 3D viewer updated.` }
+        return { ok: true, metrics: result.metrics, message: `3D model executed successfully. 3D viewer updated.` }
       }
-      return { ok: false, error: result.error, message: `CAD generation failed: ${result.error}` }
+      // On error, tell the agent what went wrong so it can fix the code
+      return { ok: false, error: result.error, message: `OpenSCAD error: ${result.error}\nFix the code and call generate_cad_model again with corrected code.` }
     }
 
     case 'search_component': {
@@ -859,6 +853,7 @@ ${formatToolsBlock()}`
 
       const resp = await callClaudeCLI(userInput, sysPrompt)
       console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — response len=${resp.text?.length} isError=${resp.isError}`)
+      console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — text: ${resp.text?.slice(0, 300)}`)
 
       if (resp.isError) {
         emit({ type: 'error', text: resp.text || 'Claude error' })

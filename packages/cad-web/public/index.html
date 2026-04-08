@@ -761,10 +761,11 @@
     .bom-list::-webkit-scrollbar { width: 4px; }
     .bom-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     .bom-item {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; flex-direction: column; gap: 4px;
       padding: 8px 14px;
       border-bottom: 1px solid var(--border-dim);
     }
+    .bom-item-row { display: flex; align-items: center; gap: 8px; }
     .bom-qty {
       width: 32px; flex-shrink: 0;
       background: var(--surface); border: 1px solid var(--border);
@@ -773,8 +774,14 @@
     }
     .bom-qty:focus { border-color: var(--accent); }
     .bom-name { flex: 1; font-size: 12px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .bom-source { font-size: 10px; color: var(--accent); text-decoration: none; flex-shrink: 0; }
-    .bom-source:hover { text-decoration: underline; }
+    .bom-links { display: flex; gap: 5px; flex-wrap: wrap; padding-left: 40px; }
+    .bom-link {
+      font-size: 10px; color: var(--accent); text-decoration: none;
+      background: rgba(91,143,255,0.08); border: 1px solid rgba(91,143,255,0.2);
+      padding: 1px 6px; border-radius: 10px; flex-shrink: 0;
+      transition: background .12s;
+    }
+    .bom-link:hover { background: rgba(91,143,255,0.2); text-decoration: none; }
     .bom-del {
       background: transparent; border: none; color: var(--text-muted);
       cursor: pointer; font-size: 12px; padding: 2px 5px; border-radius: 4px;
@@ -1170,11 +1177,7 @@
         <label class="field-label">Base URL</label>
         <input class="field-input" id="cfg-baseurl" type="text" placeholder="http://localhost:11434">
       </div>
-      <div class="field-row">
-        <label class="field-label">Gemini Key (CAD生成)</label>
-        <input class="field-input" id="cfg-cadapikey" type="password" placeholder="AIza…（用于3D建模生成）">
-      </div>
-      <div class="settings-actions">
+<div class="settings-actions">
         <button class="save-btn" onclick="saveSettings()">Save</button>
         <button class="cancel-btn" onclick="closeSettings()">Cancel</button>
       </div>
@@ -1293,7 +1296,13 @@ try {
   resize()
   ;(function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera) })()
 
-  if (sessionId) setTimeout(() => loadSTL(sessionId), 200)
+  if (sessionId) setTimeout(async () => {
+    // Only load STL if the file actually exists (meta shows hasStl or direct check)
+    try {
+      const meta = await fetch(`/api/model/${sessionId}/meta`).then(r => r.ok ? r.json() : null)
+      if (meta?.code) loadSTL(sessionId)
+    } catch {}
+  }, 200)
 } catch(e) {
   console.error('Three.js init failed:', e)
   document.getElementById('viewer-empty').innerHTML = `<span style="color:var(--text-muted);font-size:12px">3D error: ${e.message}</span>`
@@ -1813,11 +1822,8 @@ window.send = async function() {
           assistantText += evt.text
 
         } else if (evt.type === 'bom_update') {
-          // Auto-add items to BOM panel
-          ;(evt.items || []).forEach(item => {
-            if (!bomItems.find(b => b.name.toLowerCase() === item.name.toLowerCase()))
-              bomItems.push({ name: item.name, qty: item.qty || 1, source: 'lcsc' })
-          })
+          // Auto-add items to BOM panel — merge with semantic dedup
+          ;(evt.items || []).forEach(item => mergeBOMItem(item))
           saveBOM(); renderBOM()
           // Flash BOM icon
           const tb = document.getElementById('tbtn-bom')
@@ -1955,6 +1961,8 @@ async function loadSession(asset) {
       renderParams(currentParams)
     }
   } catch {}
+  // Load this session's BOM
+  loadBOM()
   // Update sidebar highlight
   document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'))
   event.currentTarget.classList.add('active')
@@ -1976,6 +1984,8 @@ window.newSession = () => {
   document.getElementById('project-results').innerHTML = '<div style="padding:20px 14px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.7">在右侧对话框描述你的项目需求<br>Claude 将自动规划并推荐硬件</div>'
   document.getElementById('project-cad-btn').disabled = true
   updateStageBar('requirements')
+  // Reset BOM to new (empty) session
+  loadBOM()
 }
 
 loadSessions()
@@ -1998,10 +2008,10 @@ fetch('/api/ai-config').then(r=>r.json()).then(cfg => {
 window.openSettings = async function() {
   try {
     const cfg = await fetch('/api/ai-config').then(r => r.json())
-    document.getElementById('cfg-provider').value   = cfg.provider || 'claude-cli'
-    document.getElementById('cfg-model').value      = cfg.model    || ''
-    document.getElementById('cfg-apikey').value     = cfg.apiKey   || ''
-    document.getElementById('cfg-baseurl').value    = cfg.baseUrl  || ''
+    document.getElementById('cfg-provider').value   = cfg.provider   || 'claude-cli'
+    document.getElementById('cfg-model').value      = cfg.model      || ''
+    document.getElementById('cfg-apikey').value     = cfg.apiKey     || ''
+    document.getElementById('cfg-baseurl').value    = cfg.baseUrl    || ''
     document.getElementById('cfg-status').textContent = ''
     onSettingsProviderChange()
   } catch {}
@@ -2028,10 +2038,10 @@ window.saveSettings = async function() {
   st.textContent = 'Saving…'; st.style.color = 'var(--text-muted)'
   try {
     const body = {
-      provider: document.getElementById('cfg-provider').value,
-      model:    document.getElementById('cfg-model').value.trim(),
-      apiKey:   document.getElementById('cfg-apikey').value.trim(),
-      baseUrl:  document.getElementById('cfg-baseurl').value.trim(),
+      provider:   document.getElementById('cfg-provider').value,
+      model:      document.getElementById('cfg-model').value.trim(),
+      apiKey:     document.getElementById('cfg-apikey').value.trim(),
+      baseUrl:    document.getElementById('cfg-baseurl').value.trim(),
     }
     await fetch('/api/ai-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     st.textContent = '✓ Saved'; st.style.color = 'var(--success)'
@@ -2110,7 +2120,8 @@ function renderProjectResults(data) {
           <div class="hw-reason">${escHtml(hw.reason)}</div>
           <div class="hw-actions">
             <button class="hw-add-btn" id="hw-add-${i}" onclick="addHwToBOM(${i})">+ 加入 BOM</button>
-            <a class="hw-lcsc-btn" href="https://www.lcsc.com/search?q=${encodeURIComponent(hw.search || hw.name)}" target="_blank">LCSC ↗</a>
+            <a class="hw-lcsc-btn" href="https://search.jd.com/Search?keyword=${encodeURIComponent(hw.search || hw.name)}" target="_blank">京东 ↗</a>
+            <a class="hw-lcsc-btn" href="https://s.taobao.com/search?q=${encodeURIComponent(hw.search || hw.name)}" target="_blank">淘宝 ↗</a>
           </div>
         </div>
       `).join('')}
@@ -2129,7 +2140,7 @@ window.addHwToBOM = function(i) {
   const hw  = projectData.hardware[i]
   const btn = document.getElementById(`hw-add-${i}`)
   if (btn.classList.contains('added')) return
-  bomItems.push({ name: hw.name, qty: hw.qty || 1, source: 'lcsc' })
+  mergeBOMItem({ name: hw.name, qty: hw.qty || 1 })
   saveBOM(); renderBOM()
   btn.textContent = '✓ 已加入 BOM'
   btn.classList.add('added')
@@ -2152,13 +2163,59 @@ window.goToCAD = function() {
 }
 
 // ── BOM ────────────────────────────────────────────────────────────────────────
-let bomItems = JSON.parse(localStorage.getItem('hw-bom') || '[]')
-// [{name, qty, source}]
+// Per-session: stored under hw-bom-{sessionId} to avoid cross-project bleed.
 
-function saveBOM() { localStorage.setItem('hw-bom', JSON.stringify(bomItems)) }
+let bomItems = []
 
-function lcscLink(name) {
-  return `https://www.lcsc.com/search?q=${encodeURIComponent(name)}`
+function bomKey() { return `hw-bom-${sessionId || 'default'}` }
+function saveBOM() { localStorage.setItem(bomKey(), JSON.stringify(bomItems)) }
+function loadBOM() {
+  bomItems = JSON.parse(localStorage.getItem(bomKey()) || '[]')
+  renderBOM()
+}
+
+// Normalize component names for semantic deduplication.
+// Maps common aliases so "USB-C cable" and "USB-C数据线" are treated as equal.
+function normalizeBOMName(name) {
+  return name.toLowerCase()
+    .replace(/usb[\s\-–—]?c|type[\s\-–—]?c/g, 'usbc')
+    .replace(/数据线|传输线|cable|cord/g, 'cable')
+    .replace(/开发板|dev\s*board|devkit/g, 'devboard')
+    .replace(/显示屏|display|screen|lcd|oled/g, 'display')
+    .replace(/传感器|sensor/g, 'sensor')
+    .replace(/电源|power\s*supply/g, 'power')
+    .replace(/电池|battery/g, 'battery')
+    .replace(/[×x*\s_\-–—]+/g, ' ')
+    .trim()
+}
+
+// Find existing BOM entry index by name (semantic match). Returns -1 if not found.
+function findBOMIndex(name) {
+  const norm = normalizeBOMName(name)
+  return bomItems.findIndex(b => normalizeBOMName(b.name) === norm)
+}
+
+// Add or merge an item into BOM. Increments qty if duplicate.
+function mergeBOMItem(item) {
+  const idx = findBOMIndex(item.name)
+  if (idx !== -1) {
+    bomItems[idx].qty = (bomItems[idx].qty || 1) + (item.qty || 1) - 1
+    // Prefer the more descriptive name
+    if (item.name.length > bomItems[idx].name.length) bomItems[idx].name = item.name
+  } else {
+    bomItems.push({ name: item.name, qty: item.qty || 1 })
+  }
+}
+
+// Generate shopping links for a component name (Chinese market first)
+function shoppingLinks(name) {
+  const q = encodeURIComponent(name)
+  return [
+    { label: '京东', url: `https://search.jd.com/Search?keyword=${q}` },
+    { label: '淘宝', url: `https://s.taobao.com/search?q=${q}` },
+    { label: '立创', url: `https://www.lcsc.com/search?q=${q}` },
+    { label: '微雪', url: `https://www.waveshare.net/catalogsearch/result/?q=${q}` },
+  ]
 }
 
 function renderBOM() {
@@ -2169,16 +2226,27 @@ function renderBOM() {
   if (empty) empty.style.display = 'none'
   bomItems.forEach((item, i) => {
     const row = document.createElement('div'); row.className = 'bom-item'
+
+    // Top row: qty + name + delete
+    const topRow = document.createElement('div'); topRow.className = 'bom-item-row'
     const qty = document.createElement('input')
     qty.type = 'number'; qty.min = 1; qty.value = item.qty; qty.className = 'bom-qty'
     qty.onchange = () => { bomItems[i].qty = parseInt(qty.value) || 1; saveBOM() }
     const name = document.createElement('span'); name.className = 'bom-name'; name.textContent = item.name
     name.title = item.name
-    const src = document.createElement('a'); src.className = 'bom-source'
-    src.href = lcscLink(item.name); src.target = '_blank'; src.textContent = 'LCSC'
     const del = document.createElement('button'); del.className = 'bom-del'; del.textContent = '✕'
     del.onclick = () => { bomItems.splice(i, 1); saveBOM(); renderBOM() }
-    row.append(qty, name, src, del)
+    topRow.append(qty, name, del)
+
+    // Bottom row: shopping links
+    const links = document.createElement('div'); links.className = 'bom-links'
+    for (const shop of shoppingLinks(item.name)) {
+      const a = document.createElement('a'); a.className = 'bom-link'
+      a.href = shop.url; a.target = '_blank'; a.textContent = shop.label
+      links.appendChild(a)
+    }
+
+    row.append(topRow, links)
     list.insertBefore(row, document.getElementById('bom-empty'))
   })
 }
@@ -2186,17 +2254,18 @@ function renderBOM() {
 window.addBOMItem = function() {
   const inp = document.getElementById('bom-name-input')
   const name = inp.value.trim(); if (!name) return
-  bomItems.push({ name, qty: 1, source: 'lcsc' })
+  mergeBOMItem({ name, qty: 1 })
   saveBOM(); renderBOM()
   inp.value = ''
 }
 
 window.exportBOM = function() {
   if (bomItems.length === 0) return
-  const csv = 'Qty,Component,LCSC Link\n' + bomItems.map(i =>
-    `${i.qty},"${i.name}","${lcscLink(i.name)}"`
+  const q = (s) => encodeURIComponent(s)
+  const csv = 'Qty,Component,京东,淘宝,立创\n' + bomItems.map(i =>
+    `${i.qty},"${i.name}","https://search.jd.com/Search?keyword=${q(i.name)}","https://s.taobao.com/search?q=${q(i.name)}","https://www.lcsc.com/search?q=${q(i.name)}"`
   ).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' })  // BOM for Excel UTF-8
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
   a.download = 'bom.csv'; a.click()
 }
@@ -2214,26 +2283,17 @@ window.generateBOM = async function() {
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data.items)) {
-        data.items.forEach(item => {
-          if (!bomItems.find(b => b.name.toLowerCase() === item.name.toLowerCase()))
-            bomItems.push({ name: item.name, qty: item.qty || 1, source: 'lcsc' })
-        })
+        data.items.forEach(item => mergeBOMItem(item))
         saveBOM(); renderBOM()
       }
     } else {
-      // Fallback: parse from description
-      btn.textContent = '✦ Auto-generate from current design'
-      btn.disabled = false
       alert('BOM generation requires the AI endpoint. Add components manually for now.')
     }
-  } catch {
-    btn.textContent = '✦ Auto-generate from current design'
-    btn.disabled = false
-  }
+  } catch {}
   btn.textContent = '✦ Auto-generate from current design'; btn.disabled = false
 }
 
-renderBOM()
+loadBOM()
 
 </script>
 </body>

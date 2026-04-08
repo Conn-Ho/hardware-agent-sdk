@@ -195,6 +195,155 @@ server.tool(
   }
 );
 
+// ── tool: measure_object ───────────────────────────────────────────────────
+// Capture photo and return it with measurement guidance so Claude can
+// estimate real-world dimensions from the image.
+
+server.tool(
+  "measure_object",
+  "Capture a photo for dimension estimation. Returns the image so you can estimate real-world sizes. Tip: ask the user to place a known reference object (ruler, coin, credit card) next to the item being measured.",
+  {
+    camera: z.union([z.number(), z.string()]).optional(),
+    reference: z.string().optional().describe(
+      "Known reference object in the frame, e.g. '1 yuan coin (25mm diameter)' or '10cm ruler'. Used to calibrate scale."
+    ),
+  },
+  async ({ camera, reference }) => {
+    const cameras = listCamerasRaw();
+    if (cameras.length === 0) {
+      return { content: [{ type: "text", text: "No cameras available." }] };
+    }
+
+    const idx = resolveCameraIndex(camera, cameras);
+    const cam = cameras.find(c => c.index === idx);
+    const outPath = join(tmpdir(), `vision_measure_${Date.now()}.jpg`);
+
+    try {
+      captureFrame(idx, outPath);
+    } catch (e) {
+      return { content: [{ type: "text", text: `Capture failed: ${e.message}` }] };
+    }
+
+    const b64 = toBase64(outPath);
+    const refNote = reference
+      ? `Reference object in frame: ${reference}`
+      : "No reference object specified — ask user to place a ruler or known-size object next to the item for accurate measurement.";
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Measurement photo from [${idx}] ${cam?.name ?? "unknown"}.\n${refNote}\n\nAnalyze the image to estimate dimensions. Report: width × height × depth in mm. Note uncertainty if reference is absent.`,
+        },
+        {
+          type: "image",
+          data: b64,
+          mimeType: "image/jpeg",
+        },
+      ],
+    };
+  }
+);
+
+// ── tool: verify_assembly ──────────────────────────────────────────────────
+// Capture photo and compare against an expected assembly state.
+
+server.tool(
+  "verify_assembly",
+  "Capture a photo to verify assembly state against an expected configuration. Use this after wiring or assembly steps to confirm correctness.",
+  {
+    camera: z.union([z.number(), z.string()]).optional(),
+    expected: z.string().describe(
+      "Description of the expected assembly state, e.g. 'ESP32-C3 connected to ST7789 display with 8 dupont wires, all correctly seated'"
+    ),
+    checkList: z.array(z.string()).optional().describe(
+      "Specific items to verify, e.g. ['VCC→3V3 red wire', 'CS→GPIO4 white wire', 'display powered on']"
+    ),
+  },
+  async ({ camera, expected, checkList = [] }) => {
+    const cameras = listCamerasRaw();
+    if (cameras.length === 0) {
+      return { content: [{ type: "text", text: "No cameras available." }] };
+    }
+
+    const idx = resolveCameraIndex(camera, cameras);
+    const cam = cameras.find(c => c.index === idx);
+    const outPath = join(tmpdir(), `vision_verify_${Date.now()}.jpg`);
+
+    try {
+      captureFrame(idx, outPath);
+    } catch (e) {
+      return { content: [{ type: "text", text: `Capture failed: ${e.message}` }] };
+    }
+
+    const b64 = toBase64(outPath);
+    const checkListText = checkList.length > 0
+      ? `\nVerify each item:\n${checkList.map((c, i) => `${i + 1}. ${c}`).join("\n")}`
+      : "";
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Assembly verification photo from [${idx}] ${cam?.name ?? "unknown"}.\n\nExpected state: ${expected}${checkListText}\n\nFor each item: report ✅ (confirmed), ❌ (wrong), ⚠️ (unclear/obstructed), or ❓ (not visible). List specific issues found.`,
+        },
+        {
+          type: "image",
+          data: b64,
+          mimeType: "image/jpeg",
+        },
+      ],
+    };
+  }
+);
+
+// ── tool: check_solder_joint ───────────────────────────────────────────────
+// Capture a close-up photo for solder joint quality analysis.
+
+server.tool(
+  "check_solder_joint",
+  "Capture a close-up photo to analyze solder joint quality. Returns the image so you can assess whether joints are properly formed, cold, bridged, or insufficient.",
+  {
+    camera: z.union([z.number(), z.string()]).optional(),
+    location: z.string().optional().describe(
+      "Which joints to inspect, e.g. 'header pins on ESP32 board' or 'USB connector pads'"
+    ),
+  },
+  async ({ camera, location }) => {
+    const cameras = listCamerasRaw();
+    if (cameras.length === 0) {
+      return { content: [{ type: "text", text: "No cameras available." }] };
+    }
+
+    const idx = resolveCameraIndex(camera, cameras);
+    const cam = cameras.find(c => c.index === idx);
+    const outPath = join(tmpdir(), `vision_solder_${Date.now()}.jpg`);
+
+    try {
+      captureFrame(idx, outPath);
+    } catch (e) {
+      return { content: [{ type: "text", text: `Capture failed: ${e.message}` }] };
+    }
+
+    const b64 = toBase64(outPath);
+    const locationNote = location ? `Inspecting: ${location}` : "Inspecting solder joints in frame.";
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Solder inspection photo from [${idx}] ${cam?.name ?? "unknown"}.\n${locationNote}\n\nEvaluate each visible joint:\n- ✅ Good: shiny, volcano-shaped, good wetting\n- ❌ Cold joint: dull/grainy, poor adhesion\n- ❌ Bridge: solder spanning two pads (short circuit risk)\n- ⚠️ Insufficient: too little solder, weak contact\n- ❓ Not visible: obscured or out of frame\n\nList all issues and recommended fixes.`,
+        },
+        {
+          type: "image",
+          data: b64,
+          mimeType: "image/jpeg",
+        },
+      ],
+    };
+  }
+);
+
 // ── start ──────────────────────────────────────────────────────────────────
 
 const transport = new StdioServerTransport();

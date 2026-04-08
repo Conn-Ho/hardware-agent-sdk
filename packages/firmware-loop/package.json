@@ -1,0 +1,18 @@
+{
+  "name": "@hardware-agent-sdk/firmware-loop",
+  "version": "0.1.0",
+  "description": "Autonomous firmware compile → flash → monitor → AI-fix loop for Arduino/ESP32",
+  "type": "module",
+  "main": "./src/index.js",
+  "bin": {
+    "fw-loop": "./bin/fw-loop.js"
+  },
+  "scripts": {
+    "test": "node bin/fw-loop.js --help"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  }
+}

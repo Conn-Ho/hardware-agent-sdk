@@ -1,0 +1,6 @@
+# Python dependencies for cad-skill executor
+# Install with: pip3 install -r requirements.txt
+
+trimesh>=4.0.0        # STL geometry metrics (bounding box, volume, watertight check)
+matplotlib>=3.7.0     # 3D render thumbnails (isometric, front, side, top views)
+numpy>=1.24.0         # Required by trimesh and matplotlib

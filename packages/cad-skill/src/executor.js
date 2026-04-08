@@ -94,12 +94,31 @@ print(json.dumps({"bounding_box":{"x":round(float(bb[0]),2),"y":round(float(bb[1
 `
   return new Promise(resolve => {
     const child = spawn('python3', ['-c', script, stlFile])
-    let out = ''
+    let out = '', err = ''
+    const timer = setTimeout(() => { child.kill(); resolve({}) }, 20_000)
     child.stdout.on('data', d => out += d)
-    child.on('close', () => {
-      try { resolve(JSON.parse(out.trim())) } catch { resolve({}) }
+    child.stderr.on('data', d => err += d)
+    child.on('close', code => {
+      clearTimeout(timer)
+      if (code !== 0) {
+        if (/No module named/.test(err)) {
+          console.error('[executor] Python metrics unavailable — install deps: pip3 install trimesh')
+        } else if (err.trim()) {
+          console.error('[executor] metrics python error:', err.slice(0, 300))
+        }
+        resolve({})
+        return
+      }
+      try { resolve(JSON.parse(out.trim())) } catch {
+        console.error('[executor] metrics JSON parse failed:', out.slice(0, 200))
+        resolve({})
+      }
     })
-    child.on('error', () => resolve({}))
+    child.on('error', e => {
+      clearTimeout(timer)
+      console.error('[executor] failed to spawn python3 for metrics:', e.message)
+      resolve({})
+    })
   })
 }
 
@@ -138,12 +157,31 @@ print(json.dumps(out))
 `
   return new Promise(resolve => {
     const child = spawn('python3', ['-c', script, stlFile])
-    let out = ''
+    let out = '', err = ''
+    const timer = setTimeout(() => { child.kill(); resolve({}) }, 30_000)
     child.stdout.on('data', d => out += d)
-    child.on('close', () => {
-      try { resolve(JSON.parse(out.trim())) } catch { resolve({}) }
+    child.stderr.on('data', d => err += d)
+    child.on('close', code => {
+      clearTimeout(timer)
+      if (code !== 0) {
+        if (/No module named/.test(err)) {
+          console.error('[executor] Python renders unavailable — install deps: pip3 install trimesh matplotlib')
+        } else if (err.trim()) {
+          console.error('[executor] render python error:', err.slice(0, 300))
+        }
+        resolve({})
+        return
+      }
+      try { resolve(JSON.parse(out.trim())) } catch {
+        console.error('[executor] render JSON parse failed:', out.slice(0, 200))
+        resolve({})
+      }
     })
-    child.on('error', () => resolve({}))
+    child.on('error', e => {
+      clearTimeout(timer)
+      console.error('[executor] failed to spawn python3 for renders:', e.message)
+      resolve({})
+    })
   })
 }
 
