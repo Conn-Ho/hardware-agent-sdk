@@ -1,4 +1,4 @@
-import { ChevronDown, Pencil } from 'lucide-react';
+import { CaretDown, PencilSimple } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Share as ShareIcon } from 'lucide-react';
+import { ShareNetwork } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShareContent } from '@/components/ui/ShareContent';
@@ -143,7 +143,7 @@ export function ChatTitle() {
                           >
                             {conversation.title || 'Chat'}
                           </span>
-                          <ChevronDown className="h-4 w-4 min-w-4" />
+                          <CaretDown className="h-4 w-4 min-w-4" />
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -154,12 +154,12 @@ export function ChatTitle() {
                           className="text-adam-neutral-200 hover:text-adam-neutral-100"
                           onClick={() => setIsEditingTitle(true)}
                         >
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <PencilSimple className="mr-2 h-4 w-4" />
                           Rename
                         </DropdownMenuItem>
                         <DialogTrigger asChild>
                           <DropdownMenuItem className="text-adam-neutral-200 hover:text-adam-neutral-100">
-                            <ShareIcon className="mr-2 h-4 w-4" />
+                            <ShareNetwork className="mr-2 h-4 w-4" />
                             Share
                           </DropdownMenuItem>
                         </DialogTrigger>

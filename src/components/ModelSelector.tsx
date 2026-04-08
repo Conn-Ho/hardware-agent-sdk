@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { CaretDown } from '@phosphor-icons/react';
 import { useState, useEffect, useRef } from 'react';
 import {
   DropdownMenu,
@@ -166,7 +166,7 @@ export function ModelSelector({
               {selectedModelConfig?.name}
             </span>
           </span>
-          <ChevronDown
+          <CaretDown
             className={`ml-1 h-4 w-4 flex-shrink-0 opacity-70 transition-transform duration-200 ${
               isDropdownOpen ? 'rotate-180' : ''
             }`}

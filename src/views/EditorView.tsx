@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { CreativeEditorView } from './CreativeEditorView';
 import { ParametricEditorView } from './ParametricEditorView';
 import { ConversationContext } from '@/contexts/ConversationContext';
@@ -97,7 +97,7 @@ export default function EditorView() {
   if (isConversationLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-adam-bg-secondary-dark text-adam-text-primary">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }

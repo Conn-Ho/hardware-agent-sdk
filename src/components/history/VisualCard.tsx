@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Clock,
-  MessageSquare,
-  MoreVertical,
-  Trash2,
-  Pencil,
-  Box,
-  Loader2,
-  LockKeyhole,
-} from 'lucide-react';
+  ChatDots,
+  DotsThreeVertical,
+  Trash,
+  PencilSimple,
+  Cube,
+  CircleNotch,
+  LockKey,
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -66,7 +66,7 @@ function ThreePreview({ geometry }: { geometry: BufferGeometry }) {
         zoom={0.4}
       />
       <Stage environment={null} intensity={0.6} position={[0, 0, 0]}>
-        <Environment files={`${import.meta.env.BASE_URL}/city.hdr`} />
+        <Environment files={`${import.meta.env.BASE_URL}city.hdr`} />
         <ambientLight intensity={0.8} />
         <directionalLight position={[5, 5, 5]} intensity={1.2} />
         <directionalLight position={[-5, 5, 5]} intensity={0.2} />
@@ -212,12 +212,12 @@ export function VisualCard({
         <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-adam-background-1 to-adam-background-2">
           {!isVisible ? (
             <div className="flex h-full w-full items-center justify-center">
-              <Box className="text-adam-neutral-600 h-16 w-16 opacity-30" />
+              <Cube className="text-adam-neutral-600 h-16 w-16 opacity-30" />
             </div>
           ) : isCompiling ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-adam-blue" />
+                <CircleNotch className="h-8 w-8 animate-spin text-adam-blue" />
                 <span className="text-xs text-adam-neutral-400">
                   Compiling...
                 </span>
@@ -225,7 +225,7 @@ export function VisualCard({
             </div>
           ) : isError || !geometry ? (
             <div className="flex h-full w-full items-center justify-center">
-              <Box className="text-adam-neutral-600 h-16 w-16 opacity-50" />
+              <Cube className="text-adam-neutral-600 h-16 w-16 opacity-50" />
             </div>
           ) : (
             <ThreePreview geometry={geometry} />
@@ -242,7 +242,7 @@ export function VisualCard({
             {conversation.privacy === 'public' ? (
               <GoodEarth className="h-3.5 w-3.5 shrink-0 text-adam-neutral-400" />
             ) : (
-              <LockKeyhole className="h-3.5 w-3.5 shrink-0 text-adam-neutral-400" />
+              <LockKey className="h-3.5 w-3.5 shrink-0 text-adam-neutral-400" />
             )}
           </div>
           <div className="flex items-center gap-3 text-xs text-adam-neutral-400">
@@ -253,7 +253,7 @@ export function VisualCard({
               })}
             </span>
             <span className="flex items-center">
-              <MessageSquare className="mr-1 h-3 w-3" />
+              <ChatDots className="mr-1 h-3 w-3" />
               {conversation.message_count}
             </span>
           </div>
@@ -269,7 +269,7 @@ export function VisualCard({
                 className="h-8 w-8 rounded-full bg-adam-background-1/80 p-0 backdrop-blur-sm transition-colors duration-200 hover:bg-adam-neutral-950"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreVertical className="h-4 w-4 text-adam-neutral-50" />
+                <DotsThreeVertical className="h-4 w-4 text-adam-neutral-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-[#191A1A]">
@@ -280,7 +280,7 @@ export function VisualCard({
                 }}
                 className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 focus:bg-adam-neutral-950"
               >
-                <Pencil className="mr-2 h-4 w-4" />
+                <PencilSimple className="mr-2 h-4 w-4" />
                 Rename
               </DropdownMenuItem>
               {conversation.privacy === 'private' ? (
@@ -302,13 +302,13 @@ export function VisualCard({
                   }}
                   className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 focus:bg-adam-neutral-950"
                 >
-                  <LockKeyhole className="mr-2 h-4 w-4" />
+                  <LockKey className="mr-2 h-4 w-4" />
                   Make Private
                 </DropdownMenuItem>
               )}
               <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 hover:text-red-500 focus:bg-adam-neutral-950 focus:text-red-500">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               </AlertDialogTrigger>

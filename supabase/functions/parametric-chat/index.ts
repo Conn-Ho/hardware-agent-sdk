@@ -16,16 +16,54 @@ import parseParameters from '../_shared/parseParameter.ts';
 import { formatUserMessage } from '../_shared/messageUtils.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
-// OpenRouter API configuration
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+// API configuration - supports routing by model prefix
+const OPENROUTER_API_URL =
+  Deno.env.get('OPENROUTER_BASE_URL') ??
+  'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') ?? '';
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? OPENROUTER_API_KEY;
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const ANTHROPIC_COMPAT_KEY =
+  Deno.env.get('ANTHROPIC_API_KEY') ?? OPENROUTER_API_KEY;
+const ANTHROPIC_COMPAT_URL = Deno.env.get('ANTHROPIC_BASE_URL')
+  ? `${Deno.env.get('ANTHROPIC_BASE_URL')}/v1/chat/completions`
+  : OPENROUTER_API_URL;
+
+function getApiConfig(model: string): {
+  url: string;
+  key: string;
+  modelName: string;
+} {
+  if (model.startsWith('google/')) {
+    return {
+      url: GEMINI_API_URL,
+      key: GEMINI_API_KEY,
+      modelName: model.replace('google/', ''),
+    };
+  }
+  if (model.startsWith('anthropic/')) {
+    return {
+      url: ANTHROPIC_COMPAT_URL,
+      key: ANTHROPIC_COMPAT_KEY,
+      modelName: model.replace('anthropic/', ''),
+    };
+  }
+  return { url: OPENROUTER_API_URL, key: OPENROUTER_API_KEY, modelName: model };
+}
 
 // Helper to stream updated assistant message rows
 function streamMessage(
   controller: ReadableStreamDefaultController,
   message: Message,
 ) {
-  controller.enqueue(new TextEncoder().encode(JSON.stringify(message) + '\n'));
+  try {
+    controller.enqueue(
+      new TextEncoder().encode(JSON.stringify(message) + '\n'),
+    );
+  } catch (_) {
+    // Stream already closed (e.g. edge runtime timeout), ignore
+  }
 }
 
 // Helper to escape regex special characters
@@ -184,16 +222,16 @@ async function generateTitleFromMessages(
 - No quotes or special formatting
 - Examples: "Coffee Mug", "Gear Assembly", "Phone Stand"`;
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(ANTHROPIC_COMPAT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${ANTHROPIC_COMPAT_KEY}`,
         'HTTP-Referer': 'https://adam-cad.com',
         'X-Title': 'Adam CAD',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-haiku',
+        model: 'claude-3-5-haiku-latest',
         max_tokens: 30,
         messages: [
           { role: 'system', content: titleSystemPrompt },
@@ -595,9 +633,12 @@ Deno.serve(async (req) => {
       }),
     );
 
+    // Route to correct API based on model prefix
+    const apiConfig = getApiConfig(model);
+
     // Prepare request body
     const requestBody: OpenRouterRequest = {
-      model,
+      model: apiConfig.modelName,
       messages: [
         { role: 'system', content: PARAMETRIC_AGENT_PROMPT },
         ...messagesToSend,
@@ -617,11 +658,11 @@ Deno.serve(async (req) => {
       requestBody.max_tokens = 20000;
     }
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(apiConfig.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${apiConfig.key}`,
         'HTTP-Referer': 'https://adam-cad.com',
         'X-Title': 'Adam CAD',
       },
@@ -907,7 +948,7 @@ Deno.serve(async (req) => {
 
             // Code generation request logic
             const codeRequestBody: OpenRouterRequest = {
-              model,
+              model: apiConfig.modelName,
               messages: [
                 { role: 'system', content: STRICT_CODE_PROMPT },
                 ...codeMessages,
@@ -923,12 +964,17 @@ Deno.serve(async (req) => {
               codeRequestBody.max_tokens = 20000;
             }
 
+            // Send keepalive messages every 5s so SSE connection stays open during long API calls
+            const keepaliveInterval = setInterval(() => {
+              streamMessage(controller, { ...newMessageData, content });
+            }, 5000);
+
             const [codeResult, titleResult] = await Promise.allSettled([
-              fetch(OPENROUTER_API_URL, {
+              fetch(apiConfig.url, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+                  Authorization: `Bearer ${apiConfig.key}`,
                   'HTTP-Referer': 'https://adam-cad.com',
                   'X-Title': 'Adam CAD',
                 },
@@ -942,6 +988,8 @@ Deno.serve(async (req) => {
               }),
               generateTitleFromMessages(messagesToSend),
             ]);
+
+            clearInterval(keepaliveInterval);
 
             let code = '';
             if (
@@ -957,6 +1005,15 @@ Deno.serve(async (req) => {
             const match = code.match(codeBlockRegex);
             if (match) {
               code = match[1].trim();
+            }
+
+            // If braces are unbalanced, the code was truncated — append missing closing braces
+            if (code) {
+              const open = (code.match(/\{/g) || []).length;
+              const close = (code.match(/\}/g) || []).length;
+              if (open > close) {
+                code += '\n' + '}'.repeat(open - close);
+              }
             }
 
             let title =

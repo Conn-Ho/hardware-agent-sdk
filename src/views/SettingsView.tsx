@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Info } from 'lucide-react';
+import { CircleNotch, Info } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useManageSubscription } from '@/services/subscriptionService';
 import { useTokenPackPurchase } from '@/services/subscriptionService';
@@ -182,7 +182,7 @@ export default function SettingsView() {
                     >
                       {isUpdateLoading ? (
                         <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <CircleNotch className="h-4 w-4 animate-spin" />
                           Saving...
                         </div>
                       ) : (
@@ -231,7 +231,7 @@ export default function SettingsView() {
                 >
                   {isResetLoading ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <CircleNotch className="h-4 w-4 animate-spin" />
                       Loading...
                     </div>
                   ) : (
@@ -357,7 +357,7 @@ export default function SettingsView() {
                   >
                     {isManageLoading ? (
                       <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <CircleNotch className="h-4 w-4 animate-spin" />
                         Loading...
                       </div>
                     ) : (
@@ -403,7 +403,7 @@ export default function SettingsView() {
                           }
                         >
                           {isThisPending && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                           )}
                           {`${pack.token_amount} tokens - $${(pack.price_cents / 100).toFixed(2)}`}
                         </Button>

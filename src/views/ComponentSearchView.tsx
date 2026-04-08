@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { Search, Package, ExternalLink, Loader2 } from 'lucide-react';
+import {
+  MagnifyingGlass,
+  Package,
+  ArrowSquareOut,
+  CircleNotch,
+} from '@phosphor-icons/react';
 import { supabase } from '@/lib/supabase';
 
 interface ComponentResult {
@@ -69,7 +74,7 @@ export function ComponentSearchView() {
       <form onSubmit={handleSearch} className="mb-6 space-y-4">
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+            <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
             <input
               type="text"
               value={query}
@@ -84,9 +89,9 @@ export function ComponentSearchView() {
             className="flex items-center gap-2 rounded-md border border-[#60a5fa] px-5 py-2.5 text-sm text-[#60a5fa] transition-all hover:bg-[#60a5fa] hover:text-black disabled:opacity-40"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <CircleNotch className="h-4 w-4 animate-spin" />
             ) : (
-              <Search className="h-4 w-4" />
+              <MagnifyingGlass className="h-4 w-4" />
             )}
             Search
           </button>
@@ -159,7 +164,7 @@ export function ComponentSearchView() {
                     rel="noopener noreferrer"
                     className="text-white/30 hover:text-white/70"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ArrowSquareOut className="h-4 w-4" />
                   </a>
                 </div>
               </div>

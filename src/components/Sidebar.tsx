@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Menu,
+  List,
   Plus,
-  LogOut,
-  Settings,
-  LayoutGrid,
+  SignOut,
+  GearSix,
+  SquaresFour,
   Package,
   Cpu,
   Camera,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -139,19 +139,18 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
               onClick={() => sidebarNavigate('/')}
             >
               {isSidebarOpen ? (
-                <div className="flex w-full">
-                  <img
-                    className="mx-auto h-8 w-full"
-                    src={`${import.meta.env.BASE_URL}/adam-logo-full.svg`}
-                    alt="Logo"
-                  />
+                <div className="flex w-full items-center gap-2 px-1">
+                  <div className="flex h-7 w-7 min-w-7 items-center justify-center rounded-md border border-[#60a5fa]/40 bg-[#60a5fa]/10 font-mono text-sm font-bold text-[#60a5fa]">
+                    H
+                  </div>
+                  <span className="font-mono text-sm font-semibold tracking-tight text-white">
+                    Hardware Agent
+                  </span>
                 </div>
               ) : (
-                <img
-                  src={`${import.meta.env.BASE_URL}/adam-logo.svg`}
-                  alt="Logo"
-                  className="h-8 w-8 min-w-8"
-                />
+                <div className="flex h-8 w-8 min-w-8 items-center justify-center rounded-md border border-[#60a5fa]/40 bg-[#60a5fa]/10 font-mono text-sm font-bold text-[#60a5fa]">
+                  H
+                </div>
               )}
             </div>
           </Link>
@@ -200,7 +199,7 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
           <nav className="space-y-1">
             {[
               {
-                icon: LayoutGrid,
+                icon: SquaresFour,
                 label: 'Creations',
                 href: '/history',
                 description: 'View past creations',
@@ -408,14 +407,14 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
                 <DropdownMenuGroup className="text-adam-text-primary">
                   <DropdownMenuItem asChild>
                     <Link to="/settings" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
+                      <GearSix className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4 text-adam-text-primary" />
+                  <SignOut className="mr-2 h-4 w-4 text-adam-text-primary" />
                   <span className="text-adam-text-primary">Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -443,7 +442,7 @@ function MobileSidebar({
           size="icon"
           className="fixed left-2 top-2.5 z-50 hover:bg-adam-neutral-700 md:hidden"
         >
-          <Menu className="h-5 w-5 text-adam-text-primary" />
+          <List className="h-5 w-5 text-adam-text-primary" />
         </Button>
       </SheetTrigger>
       <SheetContent
@@ -452,9 +451,11 @@ function MobileSidebar({
       >
         {/* For aria stuff */}
         <SheetHeader className="hidden">
-          <SheetTitle className="text-adam-text-primary">AdamCAD</SheetTitle>
+          <SheetTitle className="text-adam-text-primary">
+            Hardware Agent
+          </SheetTitle>
           <SheetDescription>
-            AI-powered CAD software for everyone
+            AI-powered hardware development toolkit
           </SheetDescription>
         </SheetHeader>
         <DesktopSidebar isSidebarOpen={true} setIsSidebarOpen={setOpen} />

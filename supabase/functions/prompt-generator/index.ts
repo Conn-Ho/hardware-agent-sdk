@@ -107,6 +107,9 @@ Deno.serve(async (req) => {
   // Initialize Anthropic client for AI interactions
   const anthropic = new Anthropic({
     apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
+    ...(Deno.env.get('ANTHROPIC_BASE_URL')
+      ? { baseURL: Deno.env.get('ANTHROPIC_BASE_URL') }
+      : {}),
   });
 
   try {

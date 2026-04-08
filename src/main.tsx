@@ -111,7 +111,7 @@ const router = createBrowserRouter(
       ],
     },
   ],
-  { future: { v7_relativeSplatPath: true }, basename: '/cadam' },
+  { future: { v7_relativeSplatPath: true }, basename: '/' },
 );
 
 createRoot(document.getElementById('root')!).render(

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import CreativeShareView from './CreativeShareView';
 import ParametricShareView from './ParametricShareView';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { ConversationContext } from '@/contexts/ConversationContext';
 import { useState } from 'react';
 import { Conversation, Message } from '@shared/types';
@@ -38,7 +38,7 @@ export default function ShareView() {
   if (isConversationLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-adam-bg-secondary-dark text-adam-text-primary">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }

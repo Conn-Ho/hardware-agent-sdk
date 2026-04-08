@@ -1,4 +1,8 @@
-import { RefreshCcw, Download, ChevronUp } from 'lucide-react';
+import {
+  ArrowCounterClockwise,
+  DownloadSimple,
+  CaretUp,
+} from '@phosphor-icons/react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -131,7 +135,7 @@ export function ParameterSection({
                   onSubmit(currentMessage, newParameters);
                 }}
               >
-                <RefreshCcw className="h-4 w-4" />
+                <ArrowCounterClockwise className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -163,7 +167,7 @@ export function ParameterSection({
               aria-label={`download ${selectedFormat.toUpperCase()} file`}
               className="h-12 flex-1 rounded-r-none bg-adam-neutral-50 text-adam-neutral-800 hover:bg-adam-neutral-100 hover:text-adam-neutral-900"
             >
-              <Download className="mr-2 h-4 w-4" />
+              <DownloadSimple className="mr-2 h-4 w-4" />
               {selectedFormat.toUpperCase()}
             </Button>
             <DropdownMenu>
@@ -175,7 +179,7 @@ export function ParameterSection({
                   aria-label="select download format"
                   className="h-12 w-12 rounded-l-none border-l border-adam-neutral-300 bg-adam-neutral-50 p-0 text-adam-neutral-800 hover:bg-adam-neutral-100 hover:text-adam-neutral-900"
                 >
-                  <ChevronUp className="h-4 w-4" />
+                  <CaretUp className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent

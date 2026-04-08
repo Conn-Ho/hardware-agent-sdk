@@ -1,21 +1,26 @@
-import { useState, useRef, useCallback, type ComponentType } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Camera,
   Eye,
   Ruler,
   Wrench,
-  Upload,
+  UploadSimple,
   X,
-  CheckCircle2,
-  type LucideProps,
-} from 'lucide-react';
+  CheckCircle,
+  type IconProps,
+} from '@phosphor-icons/react';
+import { type ForwardRefExoticComponent, type RefAttributes } from 'react';
+
+type PhosphorIcon = ForwardRefExoticComponent<
+  IconProps & RefAttributes<SVGSVGElement>
+>;
 
 type AnalysisMode = 'inspect' | 'measure' | 'verify' | 'solder';
 
 const MODES: {
   id: AnalysisMode;
   label: string;
-  icon: ComponentType<LucideProps>;
+  icon: PhosphorIcon;
   description: string;
 }[] = [
   {
@@ -33,7 +38,7 @@ const MODES: {
   {
     id: 'verify',
     label: 'Verify Assembly',
-    icon: CheckCircle2,
+    icon: CheckCircle,
     description: 'Compare to expected assembly',
   },
   {
@@ -169,7 +174,7 @@ export function VisionView() {
                   onClick={() => fileRef.current?.click()}
                   className="flex flex-1 items-center justify-center gap-2 rounded-md border border-white/10 px-4 py-2.5 text-sm text-white/50 transition-all hover:border-white/20 hover:text-white/70"
                 >
-                  <Upload className="h-4 w-4" /> Upload
+                  <UploadSimple className="h-4 w-4" /> Upload
                 </button>
                 <input
                   ref={fileRef}

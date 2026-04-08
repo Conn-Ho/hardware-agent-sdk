@@ -569,6 +569,9 @@ Deno.serve(async (req) => {
 
     const anthropic = new Anthropic({
       apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
+      ...(Deno.env.get('ANTHROPIC_BASE_URL')
+        ? { baseURL: Deno.env.get('ANTHROPIC_BASE_URL') }
+        : {}),
     });
 
     const stream = await anthropic.messages.create(

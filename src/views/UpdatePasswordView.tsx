@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,7 +53,7 @@ export function UpdatePasswordView() {
         <div className="rounded-lg bg-adam-bg-secondary-dark p-8 shadow-md">
           <div className="mb-4 flex flex-col items-center justify-center gap-2">
             <img
-              src={`${import.meta.env.BASE_URL}/adam-logo.svg`}
+              src={`${import.meta.env.BASE_URL}adam-logo.svg`}
               alt="Adam Logo"
               className="mr-2 h-8 w-8"
             />
@@ -99,7 +99,7 @@ export function UpdatePasswordView() {
             >
               {isUpdatingPassword ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                   Updating password...
                 </>
               ) : (

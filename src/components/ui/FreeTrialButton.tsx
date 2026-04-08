@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 interface FreeTrialButtonProps {
@@ -101,7 +101,7 @@ const FreeTrialButton: React.FC<FreeTrialButtonProps> = ({
         >
           {isPending ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <CircleNotch className="mr-2 h-5 w-5 animate-spin" />
               Please wait...
             </>
           ) : (

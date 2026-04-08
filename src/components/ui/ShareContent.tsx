@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, CopyIcon, Loader2 } from 'lucide-react';
+import { ClipboardText, Copy, CircleNotch } from '@phosphor-icons/react';
 import { useConversation } from '@/contexts/ConversationContext';
 import { useRef, useState } from 'react';
 import {
@@ -44,7 +44,7 @@ export function ShareContent() {
     copyToClipboard();
   };
 
-  const shareLink = `${window.location.origin}${import.meta.env.BASE_URL}/share/${conversation.id}`;
+  const shareLink = `${window.location.origin}${import.meta.env.BASE_URL}share/${conversation.id}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareLink);
@@ -100,9 +100,9 @@ export function ShareContent() {
               className="flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none"
             >
               {justCopied ? (
-                <ClipboardCheck className="h-4 w-4" />
+                <ClipboardText className="h-4 w-4" />
               ) : (
-                <CopyIcon className="h-4 w-4" />
+                <Copy className="h-4 w-4" />
               )}
               {justCopied ? 'Copied!' : 'Copy'}
             </button>
@@ -156,7 +156,7 @@ export function ShareContent() {
             {isGenerating ? (
               <div className="flex items-center gap-2">
                 Generating...
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <CircleNotch className="h-4 w-4 animate-spin" />
               </div>
             ) : (
               'Download GIF'

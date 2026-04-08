@@ -1,19 +1,19 @@
 import { Message, Model } from '@shared/types';
 import {
   ArrowUpRight,
-  Box,
-  ChevronLeft,
-  ChevronRight,
-  History,
+  Cube,
+  CaretLeft,
+  CaretRight,
+  ClockCounterClockwise,
   ThumbsDown,
   ThumbsUp,
-  ChevronDown,
-  Loader2,
-  ImageIcon,
-  Sparkles,
-} from 'lucide-react';
+  CaretDown,
+  CircleNotch,
+  Image,
+  Sparkle,
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { ArrowClockwise } from '@phosphor-icons/react';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
   cn,
@@ -181,7 +181,7 @@ export function AssistantMessage({
           <Avatar className="h-9 w-9 border border-adam-neutral-700 bg-adam-neutral-950">
             <div style={{ padding: '0.6rem 0.5rem 0.5rem 0.55rem' }}>
               <AvatarImage
-                src={`${import.meta.env.BASE_URL}/adam-logo.svg`}
+                src={`${import.meta.env.BASE_URL}adam-logo.svg`}
                 alt="Adam"
               />
             </div>
@@ -229,14 +229,14 @@ export function AssistantMessage({
                       >
                         <div className="flex h-full items-center justify-center gap-2">
                           {toolCall.name === 'create_image' && (
-                            <ImageIcon className="h-4 w-4 text-white" />
+                            <Image className="h-4 w-4 text-white" />
                           )}
                           {toolCall.name === 'create_mesh' && (
-                            <Box className="h-4 w-4 text-white" />
+                            <Cube className="h-4 w-4 text-white" />
                           )}
                           {(toolCall.name === 'build_parametric_model' ||
                             toolCall.name === 'apply_parameter_changes') && (
-                            <Box className="h-4 w-4 text-white" />
+                            <Cube className="h-4 w-4 text-white" />
                           )}
                           {toolCall.status === 'pending' && (
                             <span>
@@ -268,7 +268,7 @@ export function AssistantMessage({
                           )}
                         </div>
                         {toolCall.status === 'pending' && (
-                          <Loader2 className="h-4 w-4 animate-spin text-white" />
+                          <CircleNotch className="h-4 w-4 animate-spin text-white" />
                         )}
                       </div>
                     ))}
@@ -357,7 +357,7 @@ export function AssistantMessage({
                       disabled={isLoading}
                       className="h-6 w-6 rounded-lg p-0"
                     >
-                      <History className="h-3 w-3 p-0 text-adam-neutral-100" />
+                      <ClockCounterClockwise className="h-3 w-3 p-0 text-adam-neutral-100" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -382,7 +382,7 @@ export function AssistantMessage({
                           limitReached && 'cursor-not-allowed opacity-50',
                         )}
                       >
-                        <RefreshCw className="h-3 w-3 p-0 text-adam-neutral-100" />
+                        <ArrowClockwise className="h-3 w-3 p-0 text-adam-neutral-100" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -419,7 +419,7 @@ export function AssistantMessage({
                         limitReached && 'cursor-not-allowed opacity-50',
                       )}
                     >
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkle className="h-3 w-3" />
                       <span>Upscale</span>
                     </Button>
                   </TooltipTrigger>
@@ -443,7 +443,7 @@ export function AssistantMessage({
                     }}
                     className="h-full w-6 rounded-lg rounded-r-none border-none p-0"
                   >
-                    <ChevronLeft className="h-3 w-3 p-0 text-adam-neutral-100" />
+                    <CaretLeft className="h-3 w-3 p-0 text-adam-neutral-100" />
                   </Button>
                   <span className="text-xs tracking-widest text-adam-neutral-100">
                     {branchIndex + 1}/{message.siblings.length}
@@ -459,7 +459,7 @@ export function AssistantMessage({
                     }}
                     className="h-full w-6 rounded-lg rounded-l-none border-none p-0"
                   >
-                    <ChevronRight className="h-3 w-3 p-0 text-adam-neutral-100" />
+                    <CaretRight className="h-3 w-3 p-0 text-adam-neutral-100" />
                   </Button>
                 </div>
               )}
@@ -503,7 +503,7 @@ function ObjectButton({
     >
       <div className="flex w-full items-center justify-between border-gray-200/20 pr-16 dark:border-gray-700">
         <div className="flex min-w-0 items-center space-x-2">
-          <Box className="h-4 w-4 shrink-0 text-adam-text-primary" />
+          <Cube className="h-4 w-4 shrink-0 text-adam-text-primary" />
           <span className="truncate font-medium text-adam-text-primary">
             {title}
           </span>
@@ -711,7 +711,7 @@ function RetryModelSelector({
           )}
         >
           <span>{selectedModelConfig.name}</span>
-          <ChevronDown
+          <CaretDown
             className={cn(
               'h-3 w-3 transition-transform duration-100',
               isOpen && 'rotate-180',

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Loader2, Sparkles } from 'lucide-react';
+import { Check, CircleNotch, Sparkle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import {
   Card,
@@ -208,7 +208,7 @@ export function Subscriptions() {
                         }
                       >
                         {isThisPending && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                         )}
                         {`${pack.token_amount} tokens — $${(pack.price_cents / 100).toFixed(2)}`}
                       </Button>
@@ -255,7 +255,7 @@ function SubscriptionCard({
       {tier.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="flex items-center gap-1 rounded-full bg-adam-blue px-3 py-1 text-xs font-medium text-white">
-            <Sparkles className="h-3 w-3" />
+            <Sparkle className="h-3 w-3" />
             Most Popular
           </span>
         </div>
@@ -316,7 +316,7 @@ function SubscriptionCard({
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                 Loading...
               </>
             ) : subscription !== 'free' ? (

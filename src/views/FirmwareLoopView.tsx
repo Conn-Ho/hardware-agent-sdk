@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
   Play,
-  CheckCircle2,
+  CheckCircle,
   XCircle,
   Circle,
   Terminal,
-  ChevronRight,
-} from 'lucide-react';
+  CaretRight,
+} from '@phosphor-icons/react';
 
 type StepStatus = 'pending' | 'running' | 'success' | 'error';
 
@@ -55,7 +55,7 @@ const BOARDS = [
 
 function StepIcon({ status }: { status: StepStatus }) {
   if (status === 'success')
-    return <CheckCircle2 className="h-4 w-4 text-green-400" />;
+    return <CheckCircle className="h-4 w-4 text-green-400" />;
   if (status === 'error') return <XCircle className="h-4 w-4 text-red-400" />;
   if (status === 'running')
     return (
@@ -176,7 +176,7 @@ export function FirmwareLoopView() {
               <div key={i} className="flex items-start gap-2 text-xs">
                 {line.startsWith('$') ? (
                   <>
-                    <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-[#60a5fa]" />
+                    <CaretRight className="mt-0.5 h-3 w-3 shrink-0 text-[#60a5fa]" />
                     <span className="text-[#60a5fa]">{line.slice(2)}</span>
                   </>
                 ) : line === '' ? (
@@ -189,7 +189,7 @@ export function FirmwareLoopView() {
               </div>
             ))}
             <div className="mt-2 flex items-center gap-1 text-xs text-[#60a5fa]">
-              <ChevronRight className="h-3 w-3" />
+              <CaretRight className="h-3 w-3" />
               <span className="animate-pulse">_</span>
             </div>
           </div>

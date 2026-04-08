@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronUp } from 'lucide-react';
+import { CaretUp } from '@phosphor-icons/react';
 import { HexColorPicker } from 'react-colorful';
 import {
   Popover,
@@ -86,7 +86,7 @@ export function ColorPicker({ color, onChange }: ColorPickerProps) {
             </div>
           </div>
           <div className="relative z-20 flex h-12 w-12 items-center justify-center">
-            <ChevronUp
+            <CaretUp
               className={`h-5 w-5 text-adam-text-primary transition-transform duration-200 ${
                 isOpen ? 'rotate-180' : ''
               }`}

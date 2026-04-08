@@ -11,10 +11,12 @@
     "lint:supabase": "deno lint supabase",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "server": "node server.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

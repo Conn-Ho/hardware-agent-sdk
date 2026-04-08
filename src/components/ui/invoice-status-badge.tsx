@@ -1,11 +1,11 @@
 import {
-  CheckCircle2,
-  AlertCircle,
+  CheckCircle,
+  WarningCircle,
   Clock,
   XCircle,
   FileX,
-  CircleEllipsis,
-} from 'lucide-react';
+  DotsThreeCircle,
+} from '@phosphor-icons/react';
 
 type InvoiceStatus =
   | 'paid'
@@ -46,17 +46,17 @@ export function InvoiceStatusBadge({
   const StatusIcon = () => {
     switch (status) {
       case 'paid':
-        return <CheckCircle2 className="h-3 w-3" />;
+        return <CheckCircle className="h-3 w-3" />;
       case 'draft':
         return <Clock className="h-3 w-3" />;
       case 'open':
-        return <AlertCircle className="h-3 w-3" />;
+        return <WarningCircle className="h-3 w-3" />;
       case 'uncollectible':
         return <XCircle className="h-3 w-3" />;
       case 'void':
         return <FileX className="h-3 w-3" />;
       default:
-        return <CircleEllipsis className="h-3 w-3" />;
+        return <DotsThreeCircle className="h-3 w-3" />;
     }
   };
 

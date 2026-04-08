@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { PanelLeft } from 'lucide-react';
+import { SidebarSimple } from '@phosphor-icons/react';
 
 import { Sidebar } from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 
 export function Layout() {
   const { user, isLoading } = useAuth();
@@ -23,7 +23,7 @@ export function Layout() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-adam-bg-secondary-dark">
-        <Loader2 className="h-8 w-8 animate-spin text-adam-blue" />
+        <CircleNotch className="h-8 w-8 animate-spin text-adam-blue" />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export function Layout() {
               }`}
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
-              <PanelLeft className="h-4 w-4" />
+              <SidebarSimple className="h-4 w-4" />
             </Button>
           )}
           <div className="h-full bg-adam-bg-dark">

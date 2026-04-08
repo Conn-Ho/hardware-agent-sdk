@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ChevronDown,
-  RotateCcw,
+  CaretDown,
+  ArrowCounterClockwise,
   Sun,
   Hash,
-  Settings,
-  Gem,
+  GearSix,
+  Diamond,
   Waves,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -220,7 +220,7 @@ export function LightingControls({
       >
         <div className="flex items-center gap-1 xl:gap-2">
           <div className="rounded-full bg-adam-blue/20 p-1.5">
-            <Settings className="h-3.5 w-3.5 text-adam-blue" />
+            <GearSix className="h-3.5 w-3.5 text-adam-blue" />
           </div>
           <div className="hidden text-sm font-medium text-adam-text-primary/90 lg:block">
             controls
@@ -238,10 +238,10 @@ export function LightingControls({
               }}
               title="Reset to defaults"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
+              <ArrowCounterClockwise className="h-3.5 w-3.5" />
             </Button>
           )}
-          <ChevronDown
+          <CaretDown
             className={cn(
               'h-4 w-4 text-adam-text-primary/60 transition-transform',
               isOpen ? 'rotate-180' : '',
@@ -267,7 +267,7 @@ export function LightingControls({
             </div>
 
             <div className="flex flex-col items-center space-y-1">
-              <Gem className="h-3.5 w-3.5 text-adam-text-primary/70" />
+              <Diamond className="h-3.5 w-3.5 text-adam-text-primary/70" />
               <Input
                 type="text"
                 value={roughnessInput}
@@ -321,7 +321,7 @@ export function LightingControls({
                       onClick={resetBrightness}
                       title="Reset brightness"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" />
+                      <ArrowCounterClockwise className="h-3.5 w-3.5" />
                     </Button>
                   )}
                   <Input
@@ -352,7 +352,7 @@ export function LightingControls({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Gem className="h-3.5 w-3.5 text-adam-text-primary/70" />
+                  <Diamond className="h-3.5 w-3.5 text-adam-text-primary/70" />
                   <div className="text-xs lowercase text-adam-text-primary/80">
                     roughness
                   </div>
@@ -366,7 +366,7 @@ export function LightingControls({
                       onClick={resetRoughness}
                       title="Reset roughness"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" />
+                      <ArrowCounterClockwise className="h-3.5 w-3.5" />
                     </Button>
                   )}
                   <Input
@@ -412,7 +412,7 @@ export function LightingControls({
                         onClick={resetNormalIntensity}
                         title="Reset normal intensity"
                       >
-                        <RotateCcw className="h-3.5 w-3.5" />
+                        <ArrowCounterClockwise className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     <Input

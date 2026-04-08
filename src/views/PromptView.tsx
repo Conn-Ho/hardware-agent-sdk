@@ -1,5 +1,5 @@
 import { useNavigate, Link, useOutletContext } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { SignIn } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -198,7 +198,7 @@ export function PromptView() {
               Sign Up
             </Button>
             <Button onClick={() => navigate('/signin')} className="w-auto">
-              <LogIn className="mr-2 h-4 w-4" />
+              <SignIn className="mr-2 h-4 w-4" />
               Sign In
             </Button>
           </div>

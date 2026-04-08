@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, CircleNotch } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import Cropper from 'react-easy-crop';
 import { useUploadAvatar } from '@/services/profileService';
@@ -162,7 +162,7 @@ export const AvatarUpdateDialog = () => {
           <UserAvatar className="h-9 w-9 border border-adam-neutral-700 bg-adam-neutral-950 p-0" />
           <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
             {isUploadingAvatar ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <CircleNotch className="h-4 w-4 animate-spin text-white" />
             ) : (
               <Camera className="h-4 w-4 text-white" />
             )}
@@ -222,7 +222,7 @@ export const AvatarUpdateDialog = () => {
             >
               {isUploadingAvatar ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <CircleNotch className="h-4 w-4 animate-spin" />
                   Saving...
                 </div>
               ) : (

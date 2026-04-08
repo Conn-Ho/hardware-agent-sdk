@@ -3,7 +3,7 @@ import { useEffect, useState, useContext, useRef } from 'react';
 import { ThreeScene } from '@/components/viewer/ThreeScene';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { BufferGeometry } from 'three';
-import { Loader2, CircleAlert, Wrench } from 'lucide-react';
+import { CircleNotch, WarningCircle, Wrench } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import OpenSCADError from '@/lib/OpenSCADError';
 import { cn } from '@/lib/utils';
@@ -116,7 +116,7 @@ export function OpenSCADPreview({
         {isCompiling && (
           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-adam-neutral-700/30 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-adam-blue" />
+              <CircleNotch className="h-6 w-6 animate-spin text-adam-blue" />
               <p className="text-xs font-medium text-adam-text-primary/70">
                 Compiling...
               </p>
@@ -143,7 +143,7 @@ function FixWithAIButton({
       <div className="flex flex-col items-center gap-3">
         <div className="relative">
           <div className="absolute inset-0 animate-ping rounded-full bg-adam-blue/20" />
-          <CircleAlert className="h-8 w-8 text-adam-blue" />
+          <WarningCircle className="h-8 w-8 text-adam-blue" />
         </div>
         <div className="text-center">
           <p className="text-sm font-medium text-adam-blue">

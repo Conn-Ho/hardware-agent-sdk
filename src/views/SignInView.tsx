@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Loader2, Mail } from 'lucide-react';
+import { ArrowLeft, CircleNotch, Envelope } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -165,7 +165,7 @@ export function SignInView() {
 
             <div className="flex flex-col items-center gap-2 py-2">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-adam-blue/20">
-                <Mail className="h-6 w-6 text-adam-blue" />
+                <Envelope className="h-6 w-6 text-adam-blue" />
               </div>
               <h3 className="text-lg font-semibold text-white">
                 Check your email
@@ -245,7 +245,7 @@ export function SignInView() {
               >
                 {isVerifying ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                     Verifying...
                   </>
                 ) : (
@@ -266,7 +266,7 @@ export function SignInView() {
           <div className="mb-4 flex flex-col items-center justify-center">
             <div>
               <img
-                src={`${import.meta.env.BASE_URL}/adam-logo-full.svg`}
+                src={`${import.meta.env.BASE_URL}adam-logo-full.svg`}
                 alt="Adam Logo"
                 className="w-32"
               />
@@ -351,7 +351,7 @@ export function SignInView() {
             <Button type="submit" className="w-full p-6" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                   {mode === 'password' ? 'Signing in...' : 'Sending...'}
                 </>
               ) : mode === 'password' ? (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Mail } from 'lucide-react';
+import { Envelope } from '@phosphor-icons/react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -57,7 +57,7 @@ function EmailConfirmation() {
           {/* Icon and Header */}
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-adam-neutral-800">
-              <Mail className="h-6 w-6 text-white" />
+              <Envelope className="h-6 w-6 text-white" />
             </div>
             <h1 className="mb-4 text-2xl font-semibold text-white">
               Check Your Email

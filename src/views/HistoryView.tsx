@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Plus, LayoutGrid, List } from 'lucide-react';
+import { ChatDots, Plus, SquaresFour, List } from '@phosphor-icons/react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -322,7 +322,7 @@ export function HistoryView() {
                     : 'text-adam-neutral-400 hover:bg-transparent hover:text-adam-neutral-50'
                 }`}
               >
-                <LayoutGrid className="mr-2 h-4 w-4" />
+                <SquaresFour className="mr-2 h-4 w-4" />
                 Visual
               </Button>
             </div>
@@ -354,7 +354,7 @@ export function HistoryView() {
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center py-8 text-gray-500">
-                <MessageSquare className="mb-4 h-12 w-12 opacity-50" />
+                <ChatDots className="mb-4 h-12 w-12 opacity-50" />
                 {searchQuery ? (
                   <>
                     <p className="mb-2 text-lg font-medium">

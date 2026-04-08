@@ -1,5 +1,5 @@
 import { useMeshData } from '@/hooks/useMeshData';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import {
   useCallback,
   useEffect,
@@ -47,7 +47,7 @@ export function MeshGifPreview({
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const logoImage = useMemo(() => {
     const img = new Image();
-    img.src = `${import.meta.env.BASE_URL}/adam-logo-full.svg`; // served from public folder root
+    img.src = `${import.meta.env.BASE_URL}adam-logo-full.svg`; // served from public folder root
     return img;
   }, []);
   const isGeneratingRef = useRef(false);
@@ -649,7 +649,7 @@ export function MeshGifPreview({
   if (isMeshDataLoading || isMeshLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }
@@ -667,7 +667,7 @@ export function MeshGifPreview({
           ref={canvasRefCallback}
         />
         <img
-          src={`${import.meta.env.BASE_URL}/adam-logo-full.svg`}
+          src={`${import.meta.env.BASE_URL}adam-logo-full.svg`}
           alt="ADAM logo"
           className="pointer-events-none absolute bottom-3 right-3 w-[15%] select-none"
         />

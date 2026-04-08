@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { CaretLeft, CaretRight, CircleNotch } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useCurrentMessage } from '@/contexts/CurrentMessageContext';
 import { Carousel, CarouselContent, CarouselItem } from '../ui/carousel';
@@ -84,7 +84,7 @@ export function ImageGallery({ imageIds }: { imageIds: string[] }) {
   if (isLoading) {
     return (
       <div className="flex aspect-square w-full items-center justify-center rounded-lg text-adam-text-primary">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }
@@ -144,14 +144,14 @@ export function ImageGallery({ imageIds }: { imageIds: string[] }) {
                 className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-opacity hover:bg-black/70 md:right-8"
                 aria-label="Next image"
               >
-                <ChevronRight className="h-6 w-6" />
+                <CaretRight className="h-6 w-6" />
               </button>
               <button
                 onClick={handlePrevious}
                 className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-opacity hover:bg-black/70 md:left-8"
                 aria-label="Previous image"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <CaretLeft className="h-6 w-6" />
               </button>
             </>
           )}

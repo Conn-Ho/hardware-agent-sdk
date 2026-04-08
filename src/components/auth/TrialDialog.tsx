@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Check } from 'lucide-react';
+import { Check } from '@phosphor-icons/react';
 import FreeTrialButton from '@/components/ui/FreeTrialButton';
 import { useSubscriptionService } from '@/services/subscriptionService';
 

@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               if (await ensurePermission()) {
                 const notification = new Notification('3D model is ready', {
                   body: 'Your generated 3D model has finished. Click to open.',
-                  icon: `${import.meta.env.BASE_URL}/Adam-Logo.png`,
+                  icon: `${import.meta.env.BASE_URL}Adam-Logo.png`,
                 });
                 notification.onclick = () => {
                   window.focus();
@@ -246,12 +246,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         user,
-        hasTrialed: false,
-        subscription: 'free',
-        subscriptionTokens: 0,
+        hasTrialed: true,
+        subscription: 'pro',
+        subscriptionTokens: 99999,
         purchasedTokens: 0,
-        totalTokens: 0,
-        subscriptionTokenLimit: 0,
+        totalTokens: 99999,
+        subscriptionTokenLimit: 99999,
         subscriptionExpiresAt: null,
         isLoading: isLoading,
         signIn,

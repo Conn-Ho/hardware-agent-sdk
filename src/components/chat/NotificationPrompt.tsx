@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useProfile, useUpdateProfile } from '@/services/profileService';
 import { useToast } from '@/hooks/use-toast';

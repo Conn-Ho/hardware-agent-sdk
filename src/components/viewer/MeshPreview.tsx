@@ -8,12 +8,12 @@ import {
 } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import {
-  Download,
-  Frown,
-  HeartCrack,
-  Loader2,
-  ChevronDown,
-} from 'lucide-react';
+  DownloadSimple,
+  SmileyMeh,
+  HeartBreak,
+  CircleNotch,
+  CaretDown,
+} from '@phosphor-icons/react';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTF, GLTFLoader, GLTFParser } from 'three-stdlib';
@@ -771,7 +771,7 @@ export function MeshPreview({ meshId }: { meshId: string }) {
   if (isMeshDataLoading || isMeshLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }
@@ -779,7 +779,7 @@ export function MeshPreview({ meshId }: { meshId: string }) {
   if (!meshData) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-adam-text-primary">
-        <Frown className="h-10 w-10" />
+        <SmileyMeh className="h-10 w-10" />
         <span>3D Object Data not found</span>
       </div>
     );
@@ -788,7 +788,7 @@ export function MeshPreview({ meshId }: { meshId: string }) {
   if (meshData.status === 'failure' || error) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-adam-text-primary">
-        <HeartCrack className="h-10 w-10" />
+        <HeartBreak className="h-10 w-10" />
         <span>3D Object failed to generate</span>
       </div>
     );
@@ -797,7 +797,7 @@ export function MeshPreview({ meshId }: { meshId: string }) {
   if (!mesh) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-adam-text-primary">
-        <Frown className="h-10 w-10" />
+        <SmileyMeh className="h-10 w-10" />
         <span>3D Object not found</span>
       </div>
     );
@@ -930,9 +930,9 @@ export function MeshPreview({ meshId }: { meshId: string }) {
                   size="lg"
                   className="mx-auto flex w-[75%] items-center gap-2 px-4 py-2.5 hover:bg-adam-background-2"
                 >
-                  <Download className="h-4 w-4" />
+                  <DownloadSimple className="h-4 w-4" />
                   <span>Download</span>
-                  <ChevronDown className="ml-1 h-3 w-3 opacity-70" />
+                  <CaretDown className="ml-1 h-3 w-3 opacity-70" />
                 </Button>
               </DownloadMenu>
             </div>
@@ -953,9 +953,9 @@ export function MeshPreview({ meshId }: { meshId: string }) {
             normalIntensity={normalIntensity}
           >
             <Button size="lg" className="flex items-center gap-2 px-4 py-2.5">
-              <Download className="h-4 w-4" />
+              <DownloadSimple className="h-4 w-4" />
               <span className="hidden xl:inline">Download</span>
-              <ChevronDown className="ml-1 h-3 w-3 opacity-70" />
+              <CaretDown className="ml-1 h-3 w-3 opacity-70" />
             </Button>
           </DownloadMenu>
         </div>

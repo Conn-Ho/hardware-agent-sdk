@@ -9,15 +9,15 @@ import React, {
 } from 'react';
 import {
   ArrowUp,
-  ImagePlus,
+  Image as ImageIcon,
   Images,
-  Loader2,
+  CircleNotch,
   Square,
-  CircleX,
-  Wand2,
-  Box,
+  XCircle,
+  MagicWand,
+  Cube,
   X,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { cn, CREATIVE_MODELS, PARAMETRIC_MODELS } from '@/lib/utils';
 import { Content, CreativeModel, MeshFileType, Model } from '@shared/types';
 import {
@@ -1408,12 +1408,12 @@ function TextAreaChat({
                         )}
                         {mesh.isUploading && (
                           <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50">
-                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            <CircleNotch className="h-4 w-4 animate-spin text-white" />
                           </div>
                         )}
                         {!mesh.isUploading && (
                           <div className="absolute bottom-[-0.50rem] right-[-0.50rem] rounded-full border border-adam-neutral-500 bg-adam-neutral-500 text-white transition-colors duration-200 hover:border-adam-neutral-700 hover:bg-adam-neutral-700">
-                            <Box className="h-4 w-4 text-white" />
+                            <Cube className="h-4 w-4 text-white" />
                           </div>
                         )}
                         <button
@@ -1424,7 +1424,7 @@ function TextAreaChat({
                             mesh.isUploading && 'opacity-50',
                           )}
                         >
-                          <CircleX className="h-4 w-4 stroke-[1.5]" />
+                          <XCircle className="h-4 w-4 stroke-[1.5]" />
                         </button>
                       </motion.div>
                     )}
@@ -1445,7 +1445,7 @@ function TextAreaChat({
                         />
                         {image.isUploading && (
                           <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50">
-                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            <CircleNotch className="h-4 w-4 animate-spin text-white" />
                           </div>
                         )}
                         <button
@@ -1456,7 +1456,7 @@ function TextAreaChat({
                             image.isUploading && 'opacity-50',
                           )}
                         >
-                          <CircleX className="h-4 w-4 stroke-[1.5]" />
+                          <XCircle className="h-4 w-4 stroke-[1.5]" />
                         </button>
                       </motion.div>
                     ))}
@@ -1501,7 +1501,7 @@ function TextAreaChat({
           <Avatar className="h-8 w-8">
             <div className="h-full w-full p-1.5">
               <img
-                src={`${import.meta.env.BASE_URL}/Adam-Logo.png`}
+                src={`${import.meta.env.BASE_URL}Adam-Logo.png`}
                 alt="Adam Logo"
                 className="h-full w-full object-contain"
               />
@@ -1552,9 +1552,9 @@ function TextAreaChat({
                   disabled={isGeneratingPrompt || isLoading || disabled}
                 >
                   {isGeneratingPrompt ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-adam-blue" />
+                    <CircleNotch className="h-4 w-4 animate-spin text-adam-blue" />
                   ) : (
-                    <Wand2 className="h-4 w-4 text-gray-400 transition-colors duration-200 hover:text-white" />
+                    <MagicWand className="h-4 w-4 text-gray-400 transition-colors duration-200 hover:text-white" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -1579,6 +1579,7 @@ function TextAreaChat({
                   e.stopPropagation();
                   const input = document.createElement('input');
                   input.type = 'file';
+                  input.multiple = true;
                   input.accept = `${VALID_IMAGE_FORMATS.join(', ')}, ${
                     type === 'creative'
                       ? SUPPORTED_MESH_EXTENSIONS.join(', ')
@@ -1593,7 +1594,7 @@ function TextAreaChat({
                 }}
                 disabled={disabled}
               >
-                <ImagePlus className="h-5 w-5" />
+                <ImageIcon className="h-5 w-5" />
               </Button>
             </div>
 
@@ -1616,7 +1617,7 @@ function TextAreaChat({
                       );
                     }}
                   >
-                    <Box className="h-4 w-4" />
+                    <Cube className="h-4 w-4" />
                     <span className="hidden text-xs lg:inline">Mesh</span>
                   </Button>
                 </TooltipTrigger>

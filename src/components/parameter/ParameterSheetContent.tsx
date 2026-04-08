@@ -1,4 +1,4 @@
-import { Download, ChevronUp } from 'lucide-react';
+import { DownloadSimple, CaretUp } from '@phosphor-icons/react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -121,7 +121,7 @@ export function ParameterSheetContent({
             aria-label={`download ${selectedFormat.toUpperCase()} file`}
             className="flex-1 rounded-r-none bg-adam-neutral-50 text-adam-neutral-800 hover:bg-adam-neutral-100 hover:text-adam-neutral-900"
           >
-            <Download className="mr-2 h-4 w-4" />
+            <DownloadSimple className="mr-2 h-4 w-4" />
             {selectedFormat.toUpperCase()}
           </Button>
           <DropdownMenu>
@@ -133,7 +133,7 @@ export function ParameterSheetContent({
                 aria-label="select download format"
                 className="rounded-l-none border-l border-adam-neutral-300 bg-adam-neutral-50 px-2 text-adam-neutral-800 hover:bg-adam-neutral-100 hover:text-adam-neutral-900"
               >
-                <ChevronUp className="h-4 w-4" />
+                <CaretUp className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

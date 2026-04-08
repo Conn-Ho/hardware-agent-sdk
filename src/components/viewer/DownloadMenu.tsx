@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Loader2, ShoppingCart } from 'lucide-react';
+import { CircleNotch, ShoppingCart } from '@phosphor-icons/react';
 import { ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import posthog from 'posthog-js';
 import {
@@ -791,7 +791,7 @@ export function DownloadMenu({
             disabled={isDownloadingSTL}
           >
             {isDownloadingSTL ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             <span className="text-sm">.STL</span>
             <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -808,7 +808,7 @@ export function DownloadMenu({
             disabled={isDownloadingOBJ}
           >
             {isDownloadingOBJ ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             <span className="text-sm">.OBJ</span>
             <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -827,7 +827,7 @@ export function DownloadMenu({
                 disabled={isDownloadingGLB}
               >
                 {isDownloadingGLB ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 <span className="text-sm">.GLB</span>
                 <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -844,7 +844,7 @@ export function DownloadMenu({
                 disabled={isDownloadingFBX}
               >
                 {isDownloadingFBX ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 <span className="text-sm">.FBX</span>
                 <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -862,7 +862,7 @@ export function DownloadMenu({
               disabled={isDownloadingGLB}
             >
               {isDownloadingGLB ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               <span className="text-sm">
                 .{(meshData?.file_type || 'glb').toUpperCase()}
@@ -882,7 +882,7 @@ export function DownloadMenu({
             disabled={!isGifReady || isDownloadingGIF}
           >
             {isDownloadingGIF ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             <span className="text-sm">.GIF</span>
             <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -902,7 +902,7 @@ export function DownloadMenu({
                 disabled={!gltf || !mesh || isDownloadingWithTextures}
               >
                 {isDownloadingWithTextures ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 <span className="text-sm">.ZIP with Textures</span>
                 <span className="ml-3 text-xs text-adam-text-primary/60">
@@ -923,7 +923,7 @@ export function DownloadMenu({
             disabled={isOrderProcessing}
           >
             {isOrderProcessing ? (
-              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              <CircleNotch className="ml-2 h-4 w-4 animate-spin" />
             ) : (
               <ShoppingCart className="ml-2 h-4 w-4" />
             )}

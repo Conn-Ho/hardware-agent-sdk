@@ -1,11 +1,11 @@
 import {
-  MessageSquare,
+  ChatDots,
   Clock,
-  MoreVertical,
-  Trash2,
-  LockKeyhole,
-  Pencil,
-} from 'lucide-react';
+  DotsThreeVertical,
+  Trash,
+  LockKey,
+  PencilSimple,
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -84,7 +84,7 @@ export function ConversationCard({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <LockKeyhole className="h-4 w-4 text-adam-neutral-50" />
+                      <LockKey className="h-4 w-4 text-adam-neutral-50" />
                     </TooltipTrigger>
                     <TooltipContent>Private</TooltipContent>
                   </Tooltip>
@@ -99,7 +99,7 @@ export function ConversationCard({
                 })}
               </span>
               <span className="flex items-center">
-                <MessageSquare className="mr-1 h-3 w-3 text-xs text-adam-neutral-400" />
+                <ChatDots className="mr-1 h-3 w-3 text-xs text-adam-neutral-400" />
                 {conversation.message_count} messages
               </span>
             </div>
@@ -125,7 +125,7 @@ export function ConversationCard({
                   className="h-8 w-8 p-0 transition-colors duration-200 ease-out hover:bg-adam-neutral-950"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical className="h-4 w-4 text-adam-neutral-50" />
+                  <DotsThreeVertical className="h-4 w-4 text-adam-neutral-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-[#191A1A]">
@@ -134,7 +134,7 @@ export function ConversationCard({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DropdownMenuItem className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 hover:text-red-500 focus:bg-adam-neutral-950 focus:text-red-500">
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -157,7 +157,7 @@ export function ConversationCard({
                     }}
                     className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 hover:text-adam-neutral-50 focus:bg-adam-neutral-950 focus:text-adam-neutral-50"
                   >
-                    <LockKeyhole className="mr-2 h-4 w-4" />
+                    <LockKey className="mr-2 h-4 w-4" />
                     Make Private
                   </DropdownMenuItem>
                 )}
@@ -168,7 +168,7 @@ export function ConversationCard({
                   }}
                   className="text-adam-neutral-50 hover:cursor-pointer hover:bg-adam-neutral-950 hover:text-adam-neutral-50 focus:bg-adam-neutral-950 focus:text-adam-neutral-50"
                 >
-                  <Pencil className="mr-2 h-4 w-4" />
+                  <PencilSimple className="mr-2 h-4 w-4" />
                   Rename
                 </DropdownMenuItem>
               </DropdownMenuContent>

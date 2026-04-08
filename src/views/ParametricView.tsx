@@ -12,7 +12,7 @@ import {
 import { useCurrentMessage } from '@/contexts/CurrentMessageContext';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight } from 'lucide-react';
+import { CaretDoubleRight } from '@phosphor-icons/react';
 import { TreeNode } from '@shared/Tree';
 import { ParametricPreviewSection } from '@/components/viewer/ParametricPreviewSection';
 import { ParametricPreviewDialog } from '@/components/viewer/ParametricPreviewDialog';
@@ -245,7 +245,7 @@ export default function ParametricView({
                   className="rounded-l-none rounded-r-lg border-b border-r border-t border-gray-200/20 bg-adam-bg-secondary-dark p-2 text-adam-text-primary transition-colors dark:border-gray-800 [@media(hover:hover)]:hover:bg-adam-neutral-950 [@media(hover:hover)]:hover:text-adam-neutral-10"
                   onClick={handleChatCollapse}
                 >
-                  <ChevronsRight className="h-5 w-5 rotate-180" />
+                  <CaretDoubleRight className="h-5 w-5 rotate-180" />
                 </Button>
               </div>
             )}
@@ -256,7 +256,7 @@ export default function ParametricView({
                   onClick={handleChatExpand}
                   className="flex h-[100px] w-9 flex-col items-center rounded-l-none rounded-r-lg bg-adam-bg-secondary-dark px-1.5 py-2 text-adam-text-primary"
                 >
-                  <ChevronsRight className="h-5 w-5 text-white" />
+                  <CaretDoubleRight className="h-5 w-5 text-white" />
                   <div className="flex flex-1 items-center justify-center">
                     <span className="rotate-90 transform text-center text-base font-semibold text-white">
                       Chat
@@ -295,7 +295,7 @@ export default function ParametricView({
                       className="rounded-l-lg rounded-r-none border-b border-l border-t border-gray-200/20 bg-adam-bg-secondary-dark p-2 text-adam-text-primary transition-colors dark:border-gray-800 [@media(hover:hover)]:hover:bg-adam-neutral-950 [@media(hover:hover)]:hover:text-adam-neutral-10"
                       onClick={handleParametersCollapse}
                     >
-                      <ChevronsRight className="h-5 w-5" />
+                      <CaretDoubleRight className="h-5 w-5" />
                     </Button>
                   </div>
                 )}
@@ -306,7 +306,7 @@ export default function ParametricView({
                       onClick={handleParametersExpand}
                       className="flex h-[140px] w-9 flex-col items-center rounded-l-lg rounded-r-none bg-adam-bg-secondary-dark p-2 px-1.5 py-2 text-adam-text-primary"
                     >
-                      <ChevronsRight className="mb-3 h-5 w-5 rotate-180 text-white" />
+                      <CaretDoubleRight className="mb-3 h-5 w-5 rotate-180 text-white" />
                       <div className="flex flex-1 items-center justify-center">
                         <span className="min-w-[100px] -rotate-90 transform text-center text-base font-semibold text-white">
                           Parameters

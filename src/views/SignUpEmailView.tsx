@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -110,7 +110,7 @@ export function SignUpEmailView() {
         <div className="rounded-lg bg-adam-bg-secondary-dark p-8 shadow-md">
           <div className="mb-4 flex flex-col items-center justify-center gap-2">
             <img
-              src={`${import.meta.env.BASE_URL}/adam-logo.svg`}
+              src={`${import.meta.env.BASE_URL}adam-logo.svg`}
               alt="Adam Logo"
               className="mr-2 h-8 w-8"
             />
@@ -195,7 +195,7 @@ export function SignUpEmailView() {
             <Button type="submit" className="w-full p-6" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                   Creating account...
                 </>
               ) : (

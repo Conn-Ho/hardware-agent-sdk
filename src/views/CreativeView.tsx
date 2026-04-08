@@ -10,7 +10,7 @@ import {
 import { ChatSection } from '@/components/chat/ChatSection';
 import { Button } from '@/components/ui/button';
 import { useRef, useState, useMemo, useCallback } from 'react';
-import { ChevronsRight } from 'lucide-react';
+import { CaretDoubleRight } from '@phosphor-icons/react';
 import { TreeNode } from '@shared/Tree';
 import { CreativePreviewDialog } from '@/components/viewer/CreativePreviewDialog';
 
@@ -176,7 +176,7 @@ export function CreativeView({
                     className="rounded-l-none rounded-r-lg border-b border-r border-t border-gray-200/20 bg-adam-bg-secondary-dark p-2 text-adam-text-primary transition-colors hover:bg-black hover:text-adam-neutral-0 dark:border-gray-800"
                     onClick={handleCollapse}
                   >
-                    <ChevronsRight className="h-5 w-5 rotate-180" />
+                    <CaretDoubleRight className="h-5 w-5 rotate-180" />
                   </Button>
                 </div>
               )}
@@ -187,7 +187,7 @@ export function CreativeView({
                     onClick={handleExpand}
                     className="flex h-[100px] w-9 flex-col items-center rounded-l-none rounded-r-lg bg-adam-bg-secondary-dark px-1.5 py-2 text-adam-text-primary"
                   >
-                    <ChevronsRight className="h-5 w-5 text-white" />
+                    <CaretDoubleRight className="h-5 w-5 text-white" />
                     <div className="flex flex-1 items-center justify-center">
                       <span className="rotate-90 transform text-center text-base font-semibold text-white">
                         Chat

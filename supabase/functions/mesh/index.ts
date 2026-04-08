@@ -138,6 +138,9 @@ const supabaseClient = getServiceRoleSupabaseClient();
 // Initialize Anthropic client for fun message generation
 const anthropic = new Anthropic({
   apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
+  ...(Deno.env.get('ANTHROPIC_BASE_URL')
+    ? { baseURL: Deno.env.get('ANTHROPIC_BASE_URL') }
+    : {}),
 });
 
 // Helper function to stream message data to the client

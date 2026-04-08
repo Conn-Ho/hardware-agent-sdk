@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react';
 import { Message } from '@shared/types';
 import {
-  ChevronLeft,
-  ChevronRight,
+  CaretLeft,
+  CaretRight,
   Check,
   Copy,
-  Pencil,
+  PencilSimple,
   X,
   Wrench,
-  Box,
-} from 'lucide-react';
+  Cube,
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -205,7 +205,7 @@ export function UserMessage({
                               }}
                               disabled={limitReached || isLoading}
                             >
-                              <Pencil className="h-3 w-3 p-0 text-adam-neutral-100" />
+                              <PencilSimple className="h-3 w-3 p-0 text-adam-neutral-100" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Edit</TooltipContent>
@@ -311,7 +311,7 @@ function BranchNavigation({
           changeLeaf(leafNodes[branchIndex - 1].id);
         }}
       >
-        <ChevronLeft className="h-3 w-3 p-0 text-adam-neutral-100" />
+        <CaretLeft className="h-3 w-3 p-0 text-adam-neutral-100" />
       </Button>
       <span className="text-xs tracking-widest text-adam-neutral-100">
         {branchIndex + 1}/{branches.length}
@@ -325,7 +325,7 @@ function BranchNavigation({
           changeLeaf(leafNodes[branchIndex + 1].id);
         }}
       >
-        <ChevronRight className="h-3 w-3 p-0 text-adam-neutral-100" />
+        <CaretRight className="h-3 w-3 p-0 text-adam-neutral-100" />
       </Button>
     </div>
   );
@@ -367,7 +367,7 @@ function UserMessageMeshViewer({ message }: { message: Message }) {
       >
         <MeshImagePreview meshId={message.content.mesh.id} />
         <div className="absolute bottom-1 right-1 rounded-full border border-adam-neutral-500 bg-adam-neutral-500 text-white transition-colors duration-200 hover:border-adam-neutral-700 hover:bg-adam-neutral-700">
-          <Box className="h-4 w-4 text-white" />
+          <Cube className="h-4 w-4 text-white" />
         </div>
       </div>
     </div>

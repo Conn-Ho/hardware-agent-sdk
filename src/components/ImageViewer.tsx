@@ -1,4 +1,10 @@
-import { Check, DownloadIcon, Frown, Loader2, PlusIcon } from 'lucide-react';
+import {
+  Check,
+  DownloadSimple,
+  SmileyMeh,
+  CircleNotch,
+  Plus,
+} from '@phosphor-icons/react';
 import { useMemo, useState } from 'react';
 import { useItemSelection } from '@/hooks/useItemSelection';
 import { cn } from '@/lib/utils';
@@ -49,7 +55,7 @@ export function ImageViewer({
           className,
         )}
       >
-        <Frown className="h-10 w-10" />
+        <SmileyMeh className="h-10 w-10" />
         <span>Image generation failed</span>
       </div>
     );
@@ -63,7 +69,7 @@ export function ImageViewer({
           className,
         )}
       >
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <CircleNotch className="h-10 w-10 animate-spin" />
       </div>
     );
   }
@@ -76,7 +82,7 @@ export function ImageViewer({
           className,
         )}
       >
-        <Frown className="h-10 w-10" />
+        <SmileyMeh className="h-10 w-10" />
         <span>Image not found</span>
       </div>
     );
@@ -98,7 +104,7 @@ export function ImageViewer({
         />
         {!loaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-adam-neutral-800/50 text-adam-text-primary">
-            <Loader2 className="h-10 w-10 animate-spin" />
+            <CircleNotch className="h-10 w-10 animate-spin" />
           </div>
         )}
         {clickable && (
@@ -116,7 +122,7 @@ export function ImageViewer({
               className={`absolute bottom-3 right-3 z-10 cursor-pointer transition-transform duration-200 hover:scale-110 ${hoverable ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}
               onClick={handleDownload}
             >
-              <DownloadIcon className="h-5 w-5 text-white drop-shadow-[0px_2px_3px_rgba(0,0,0,0.4)]" />
+              <DownloadSimple className="h-5 w-5 text-white drop-shadow-[0px_2px_3px_rgba(0,0,0,0.4)]" />
             </div>
             {/* Selected Image Checkbox */}
             <div
@@ -130,7 +136,7 @@ export function ImageViewer({
               }}
             >
               {isSelected && <Check className="h-4 w-4 text-white" />}
-              {!isSelected && <PlusIcon className="h-4 w-4 text-white" />}
+              {!isSelected && <Plus className="h-4 w-4 text-white" />}
             </div>
           </>
         )}

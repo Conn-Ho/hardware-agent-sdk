@@ -7,7 +7,7 @@ export function TermsOfServiceView() {
         <div className="rounded-lg bg-adam-bg-secondary-dark p-8 shadow-md">
           <div className="mb-8 flex flex-col items-center justify-center">
             <img
-              src={`${import.meta.env.BASE_URL}/adam-logo.svg`}
+              src={`${import.meta.env.BASE_URL}adam-logo.svg`}
               alt="Adam Logo"
               className="mb-4 h-8 w-8"
             />
