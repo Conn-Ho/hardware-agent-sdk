@@ -113,20 +113,16 @@
     }
     .sidebar-link:hover { background: var(--surface); color: var(--text); }
 
-    /* ── Main area ── */
-    .main {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
+    /* ── Viewer (flex:1, fills remaining space) ── */
+    /* .main removed — viewer-area is a direct body child */
 
-    /* ── Chat panel ── */
+    /* ── Chat panel (right side) ── */
     .chat-panel {
       width: var(--chat-w);
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      border-right: 1px solid var(--border-dim);
+      border-left: 1px solid var(--border-dim);
       background: var(--panel-bg);
     }
     .chat-header {
@@ -179,6 +175,44 @@
       border: 1px solid #ff453a44;
       border-radius: 10px;
     }
+
+    /* ── Assessment card ── */
+    .assessment-card {
+      max-width: 96%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .assessment-card h4 {
+      margin: 0; font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .assessment-q {
+      display: flex; flex-direction: column; gap: 7px;
+      padding-top: 4px; border-top: 1px solid var(--border);
+    }
+    .assessment-q .q-label {
+      font-size: 13px; color: var(--text); font-weight: 600;
+    }
+    .assessment-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+    .assessment-opt {
+      padding: 5px 11px; border-radius: 20px; font-size: 12px;
+      border: 1.5px solid var(--border); background: transparent;
+      color: var(--text); cursor: pointer; transition: all .15s;
+    }
+    .assessment-opt:hover { border-color: var(--accent); color: var(--accent); }
+    .assessment-opt.selected {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .assessment-confirm {
+      align-self: flex-end;
+      padding: 7px 18px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: var(--accent); color: #fff; border: none; cursor: pointer;
+      opacity: .45; transition: opacity .15s;
+    }
+    .assessment-confirm.ready { opacity: 1; }
+    .assessment-confirm:disabled { cursor: not-allowed; }
 
     /* image grid in user messages */
     .msg-images {
@@ -263,9 +297,10 @@
       display: flex; flex-direction: column;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; overflow: hidden;
-      transition: border-color .15s;
+      transition: border-color .15s, background .15s;
     }
     .input-box:focus-within { border-color: var(--accent); }
+    .input-box.drag-over { border-color: var(--accent); background: var(--accent-dim); }
     .input-box textarea {
       background: transparent; border: none; outline: none;
       color: var(--text); font-size: 13px;
@@ -376,13 +411,7 @@
     .render-label { font-size: 9px; color: var(--text-muted); text-align: center; padding: 2px 0; display: block; }
 
     /* ── Parameters panel ── */
-    .params-panel {
-      width: var(--params-w);
-      flex-shrink: 0;
-      background: var(--panel-bg);
-      border-left: 1px solid var(--border-dim);
-      display: flex; flex-direction: column;
-    }
+    /* params-panel replaced by .right-panel + .tool-panel */
     .params-header {
       height: 48px; flex-shrink: 0;
       display: flex; align-items: center;
@@ -588,6 +617,219 @@
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
     .dot.ok  { background: var(--success); box-shadow: 0 0 5px var(--success); }
     .dot.err { background: var(--danger); }
+
+    /* ── Right panel (tool-specific, sits between toolbar and viewer) ── */
+    .right-panel {
+      width: var(--params-w);
+      flex-shrink: 0;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border-dim);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .tool-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .tool-panel.active { display: flex; }
+
+    /* ── Tool bar (right activity bar) ── */
+    .tool-bar {
+      width: 48px; flex-shrink: 0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border-dim);
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 8px 0; gap: 2px;
+    }
+    .tool-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent;
+      border-radius: 8px; cursor: pointer;
+      color: var(--text-muted);
+      transition: background .12s, color .12s;
+      position: relative; flex-shrink: 0;
+    }
+    .tool-btn:hover { background: var(--surface); color: var(--text); }
+    .tool-btn.active { background: var(--surface2); color: var(--accent); }
+    .tool-btn .tool-tip {
+      position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 11px; font-weight: 500;
+      padding: 4px 8px; border-radius: 6px; white-space: nowrap;
+      pointer-events: none; opacity: 0; transition: opacity .15s;
+      z-index: 200;
+    }
+    .tool-btn:hover .tool-tip { opacity: 1; }
+    .tool-bar-sep {
+      width: 24px; height: 1px; background: var(--border-dim); margin: 4px 0;
+    }
+
+    /* ── Project / Requirements panel ── */
+    .project-body {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .project-body::-webkit-scrollbar { width: 4px; }
+    .project-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .chat-stage-bar {
+      padding: 8px 14px 10px;
+      border-top: 1px solid var(--border-dim);
+      flex-shrink: 0;
+    }
+    .project-stage-steps {
+      display: flex; gap: 4px; align-items: center;
+    }
+    .stage-step {
+      flex: 1; height: 4px; border-radius: 2px; background: var(--border);
+      transition: background .3s;
+    }
+    .stage-step.done { background: var(--success); }
+    .stage-step.active { background: var(--accent); }
+    .project-stage-name {
+      font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 6px;
+    }
+    .project-section { padding: 10px 14px 4px; }
+    .project-section-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .project-summary {
+      font-size: 12px; color: var(--text-dim); line-height: 1.5;
+      padding: 8px 12px; background: var(--surface);
+      border-radius: 7px; margin-bottom: 4px;
+    }
+
+    .req-item {
+      display: flex; align-items: flex-start; gap: 7px;
+      padding: 5px 0; font-size: 12px; color: var(--text-dim);
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .req-item:last-child { border-bottom: none; }
+    .req-bullet {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0; margin-top: 5px;
+    }
+
+    .hw-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .hw-card-top { display: flex; align-items: center; gap: 7px; }
+    .hw-type-badge {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; padding: 2px 6px; border-radius: 4px;
+      background: var(--surface2); color: var(--text-muted); flex-shrink: 0;
+    }
+    .hw-name { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); }
+    .hw-qty { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .hw-reason { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .hw-actions { display: flex; gap: 5px; margin-top: 2px; }
+    .hw-add-btn {
+      flex: 1; padding: 5px 8px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer;
+      transition: border-color .12s, color .12s, background .12s;
+    }
+    .hw-add-btn:hover { border-color: var(--success); color: var(--success); background: #30d15811; }
+    .hw-add-btn.added { border-color: var(--success); color: var(--success); opacity: .6; cursor: default; }
+    .hw-lcsc-btn {
+      padding: 5px 8px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--accent); font-size: 11px; cursor: pointer;
+      text-decoration: none; display: flex; align-items: center;
+    }
+    .hw-lcsc-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+    .project-cad-btn {
+      margin: 10px 12px; padding: 9px;
+      background: transparent; border: 1px solid var(--accent);
+      border-radius: 8px; color: var(--accent);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .project-cad-btn:hover { background: var(--accent-dim); }
+    .project-cad-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .project-analyzing {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 20px; color: var(--text-muted); font-size: 12px;
+    }
+    .project-analyzing .log-spinner { width: 12px; height: 12px; }
+
+    /* ── BOM panel ── */
+    .bom-list { flex: 1; overflow-y: auto; }
+    .bom-list::-webkit-scrollbar { width: 4px; }
+    .bom-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .bom-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .bom-qty {
+      width: 32px; flex-shrink: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-size: 11px;
+      padding: 3px 4px; border-radius: 5px; text-align: center; outline: none;
+    }
+    .bom-qty:focus { border-color: var(--accent); }
+    .bom-name { flex: 1; font-size: 12px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bom-source { font-size: 10px; color: var(--accent); text-decoration: none; flex-shrink: 0; }
+    .bom-source:hover { text-decoration: underline; }
+    .bom-del {
+      background: transparent; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 12px; padding: 2px 5px; border-radius: 4px;
+      opacity: 0; flex-shrink: 0;
+      transition: opacity .12s, color .12s;
+    }
+    .bom-item:hover .bom-del { opacity: 1; }
+    .bom-del:hover { color: var(--danger); }
+    .bom-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 140px; gap: 8px; color: var(--text-muted); font-size: 12px; text-align: center; padding: 0 20px;
+    }
+    .bom-add-row {
+      display: flex; gap: 6px; padding: 10px 12px;
+      border-top: 1px solid var(--border-dim); flex-shrink: 0;
+    }
+    .bom-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-size: 12px;
+      padding: 6px 8px; border-radius: 7px; outline: none;
+    }
+    .bom-input:focus { border-color: var(--accent); }
+    .bom-gen-btn {
+      width: 100%; padding: 8px; margin: 0 12px 10px;
+      width: calc(100% - 24px);
+      background: transparent; border: 1px dashed var(--border);
+      border-radius: 8px; color: var(--text-muted); font-size: 12px; cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .bom-gen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Panel placeholder (PCB / Firmware / Assembly) ── */
+    .panel-placeholder {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; color: var(--text-muted); padding: 24px; text-align: center;
+    }
+    .panel-placeholder svg { opacity: .25; }
+    .panel-placeholder h3 { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-top: 4px; }
+    .panel-placeholder p { font-size: 11px; line-height: 1.6; max-width: 200px; }
+    .coming-badge {
+      font-size: 10px; font-weight: 600; letter-spacing: .5px;
+      background: var(--surface2); color: var(--text-muted);
+      padding: 3px 9px; border-radius: 10px;
+    }
+    .panel-placeholder .feature-list {
+      list-style: none; text-align: left; width: 100%; font-size: 11px; color: var(--text-muted);
+      display: flex; flex-direction: column; gap: 6px; margin-top: 4px;
+    }
+    .panel-placeholder .feature-list li {
+      display: flex; align-items: flex-start; gap: 6px;
+    }
+    .panel-placeholder .feature-list li::before {
+      content: '–'; color: var(--border); flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -623,98 +865,268 @@
   </div>
 </aside>
 
-<!-- ── Main ── -->
-<div class="main">
+<!-- ── Tool bar (left activity bar) ── -->
+<nav class="tool-bar" id="tool-bar">
+  <button class="tool-btn" id="tbtn-project" onclick="switchTool('project')" title="项目规划">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 8v4l3 3"/>
+    </svg>
+    <span class="tool-tip">项目规划</span>
+  </button>
+  <div class="tool-bar-sep"></div>
+  <button class="tool-btn active" id="tbtn-cad" onclick="switchTool('cad')" title="CAD">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+      <line x1="12" y1="22.08" x2="12" y2="12"/>
+    </svg>
+    <span class="tool-tip">CAD 参数</span>
+  </button>
+  <button class="tool-btn" id="tbtn-pcb" onclick="switchTool('pcb')" title="PCB">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="2" y="2" width="20" height="20" rx="2"/>
+      <rect x="6" y="6" width="4" height="4"/>
+      <rect x="14" y="6" width="4" height="4"/>
+      <rect x="10" y="14" width="4" height="4"/>
+      <line x1="8" y1="10" x2="8" y2="14"/><line x1="8" y1="14" x2="10" y2="14"/>
+      <line x1="16" y1="10" x2="16" y2="14"/><line x1="16" y1="14" x2="14" y2="14"/>
+    </svg>
+    <span class="tool-tip">PCB 设计</span>
+  </button>
+  <button class="tool-btn" id="tbtn-firmware" onclick="switchTool('firmware')" title="Firmware">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="7" y="7" width="10" height="10" rx="1"/>
+      <path d="M7 9H5M5 12H4M5 15H7M9 17v2M12 17v2M15 17v2M17 15h2M19 12h1M17 9h2M15 7V5M12 7V4M9 7V5"/>
+    </svg>
+    <span class="tool-tip">固件</span>
+  </button>
+  <div class="tool-bar-sep"></div>
+  <button class="tool-btn" id="tbtn-bom" onclick="switchTool('bom')" title="BOM">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1"/>
+      <line x1="9" y1="12" x2="15" y2="12"/>
+      <line x1="9" y1="16" x2="13" y2="16"/>
+    </svg>
+    <span class="tool-tip">物料清单</span>
+  </button>
+  <button class="tool-btn" id="tbtn-assembly" onclick="switchTool('assembly')" title="Assembly">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    </svg>
+    <span class="tool-tip">装配</span>
+  </button>
+</nav>
 
-  <!-- Chat panel -->
-  <div class="chat-panel">
-    <div class="chat-header">
-      <span class="chat-title" id="chat-title">New Creation</span>
-      <div class="exec-badge">
-        <div class="dot" id="exec-dot"></div>
-        <span id="exec-label">Checking…</span>
-      </div>
-    </div>
 
-    <div class="messages" id="messages">
-      <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0">
-        Describe the part you want to design.<br>Optionally attach a reference image.
-      </div>
-    </div>
+<!-- ── Right panel (tool-specific) ── -->
+<aside class="right-panel" id="right-panel">
 
-    <div class="input-area">
-      <div class="image-attach-preview" id="attach-preview"></div>
-      <div class="input-box">
-        <textarea id="prompt-input" placeholder="Describe a part to generate…" rows="3"></textarea>
-        <div class="input-controls">
-          <button class="attach-btn" onclick="triggerImageUpload()" title="Attach image">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </button>
-          <input type="file" id="image-input" accept="image/*" style="display:none" onchange="handleImageFile(this.files[0])">
-          <button class="mode-pill" id="btn-new"    onclick="setMode('new')">New</button>
-          <button class="mode-pill" id="btn-refine" onclick="setMode('refine')">Refine</button>
-          <div class="spacer"></div>
-          <select class="model-select" id="provider-select" onchange="onProviderSelectChange()">
-            <option value="claude-cli">Claude CLI</option>
-            <option value="gemini">Gemini</option>
-            <option value="anthropic">Anthropic</option>
-            <option value="openai">OpenAI-compat</option>
-          </select>
-          <button class="send-btn" id="send-btn" onclick="send()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-          </button>
-        </div>
-      </div>
+  <!-- Project Planning -->
+  <div class="tool-panel" id="panel-project">
+    <div class="params-header">
+      <span class="params-title">项目规划</span>
     </div>
-  </div>
-
-  <!-- 3D Viewer -->
-  <div class="viewer-area">
-    <div id="viewer">
-      <div class="viewer-empty" id="viewer-empty">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity=".4">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-        </svg>
-        <span>No model yet</span>
-      </div>
+    <div class="project-body" id="project-body">
+      <div id="project-results"><div style="padding:20px 14px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.7">在右侧对话框描述你的项目需求<br>Claude 将自动规划并推荐硬件</div></div>
     </div>
-    <div class="renders-strip" id="renders-strip"></div>
-    <div class="viewer-bottom">
-      <div class="view-controls">
-        <button class="view-btn active" id="vbtn-solid"     onclick="setViewMode('solid')">Solid</button>
-        <button class="view-btn"        id="vbtn-wireframe" onclick="setViewMode('wireframe')">Wireframe</button>
-      </div>
-      <div class="nav-cube">
-        <span class="nav-face" onclick="setCamView('top')">TOP</span>
-        <span class="nav-face" onclick="setCamView('front')">FRONT</span>
-        <span class="nav-face" onclick="setCamView('side')">SIDE</span>
-        <span class="nav-face" onclick="setCamView('iso')">ISO</span>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /main -->
-
-<!-- ── Parameters panel ── -->
-<aside class="params-panel">
-  <div class="params-header">
-    <span class="params-title">Parameters</span>
-    <button class="reset-btn" onclick="resetParams()" title="Reset to original">↺</button>
-  </div>
-  <div class="params-list" id="params-list">
-    <div class="params-empty">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Generate a model to see its parameters here
-    </div>
-  </div>
-  <div class="params-footer">
-    <button class="stl-btn" id="stl-btn" onclick="downloadSTL()" disabled>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      STL
+    <button class="project-cad-btn" id="project-cad-btn" onclick="goToCAD()" disabled>
+      → 开始 CAD 设计
     </button>
-    <button class="step-btn" id="step-btn" onclick="downloadSTEP()" title="Download STEP">STEP</button>
   </div>
+
+  <!-- CAD: Parameters -->
+  <div class="tool-panel active" id="panel-cad">
+    <div class="params-header">
+      <span class="params-title">Parameters</span>
+      <button class="reset-btn" onclick="resetParams()" title="Reset to original">↺</button>
+    </div>
+    <div class="params-list" id="params-list">
+      <div class="params-empty">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Generate a model to see its parameters here
+      </div>
+    </div>
+    <div class="params-footer">
+      <button class="stl-btn" id="stl-btn" onclick="downloadSTL()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        STL
+      </button>
+      <button class="step-btn" id="step-btn" onclick="downloadSTEP()" title="Download STEP">STEP</button>
+    </div>
+  </div>
+
+  <!-- PCB -->
+  <div class="tool-panel" id="panel-pcb">
+    <div class="params-header">
+      <span class="params-title">PCB Design</span>
+    </div>
+    <div class="panel-placeholder">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="2" y="2" width="20" height="20" rx="2"/>
+        <rect x="6" y="6" width="4" height="4"/>
+        <rect x="14" y="6" width="4" height="4"/>
+        <rect x="10" y="14" width="4" height="4"/>
+        <line x1="8" y1="10" x2="8" y2="14"/><line x1="8" y1="14" x2="10" y2="14"/>
+        <line x1="16" y1="10" x2="16" y2="14"/><line x1="16" y1="14" x2="14" y2="14"/>
+      </svg>
+      <span class="coming-badge">COMING SOON</span>
+      <h3>PCB Design</h3>
+      <p>AI-assisted schematic and PCB layout generation with KiCad integration.</p>
+      <ul class="feature-list">
+        <li>Generate schematic from description</li>
+        <li>Auto-route PCB layout</li>
+        <li>KiCad .kicad_pcb export</li>
+        <li>Gerber file generation</li>
+        <li>JLCPCB/PCBWay order prep</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Firmware -->
+  <div class="tool-panel" id="panel-firmware">
+    <div class="params-header">
+      <span class="params-title">Firmware</span>
+    </div>
+    <div class="panel-placeholder">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="7" y="7" width="10" height="10" rx="1"/>
+        <path d="M7 9H5m0 2H4m1 2H5m2 2v2m2 0v1m2-1v2m2-2v2m2-2h2m0-2h1m-1-2h2M9 7V5m2 0V4m2 1V5m-7 2L7 5m10 2 2-2M7 17l-2 2m12-2 2 2"/>
+      </svg>
+      <span class="coming-badge">COMING SOON</span>
+      <h3>Firmware Loop</h3>
+      <p>Write, compile, and simulate firmware for your hardware project.</p>
+      <ul class="feature-list">
+        <li>AI code generation for Arduino/ESP32</li>
+        <li>arduino-cli compilation</li>
+        <li>Wokwi simulation in browser</li>
+        <li>Serial monitor output</li>
+        <li>Flash to device via USB</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- BOM / Shopping -->
+  <div class="tool-panel" id="panel-bom">
+    <div class="params-header">
+      <span class="params-title">Bill of Materials</span>
+      <button class="reset-btn" onclick="exportBOM()" title="Export BOM as CSV">↓</button>
+    </div>
+    <div class="bom-list" id="bom-list">
+      <div class="bom-empty" id="bom-empty">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        Add components to your BOM
+      </div>
+    </div>
+    <button class="bom-gen-btn" id="bom-gen-btn" onclick="generateBOM()">
+      ✦ Auto-generate from current design
+    </button>
+    <div class="bom-add-row">
+      <input class="bom-input" id="bom-name-input" placeholder="Component name…" onkeydown="if(event.key==='Enter')addBOMItem()">
+      <button class="bom-add-btn" onclick="addBOMItem()" title="Add item">+</button>
+    </div>
+  </div>
+
+  <!-- Assembly -->
+  <div class="tool-panel" id="panel-assembly">
+    <div class="params-header">
+      <span class="params-title">Assembly</span>
+    </div>
+    <div class="panel-placeholder">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+      <span class="coming-badge">COMING SOON</span>
+      <h3>Assembly Viewer</h3>
+      <p>Step-by-step visual assembly guide with 3D exploded views.</p>
+      <ul class="feature-list">
+        <li>Multi-STL exploded view</li>
+        <li>Animated assembly steps</li>
+        <li>Component highlight mode</li>
+        <li>Camera verification per step</li>
+        <li>Printable assembly guide</li>
+      </ul>
+    </div>
+  </div>
+
 </aside>
+
+<!-- ── 3D Viewer ── -->
+<div class="viewer-area">
+  <div id="viewer">
+    <div class="viewer-empty" id="viewer-empty">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity=".4">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      </svg>
+      <span>No model yet</span>
+    </div>
+  </div>
+  <div class="renders-strip" id="renders-strip"></div>
+  <div class="viewer-bottom">
+    <div class="view-controls">
+      <button class="view-btn active" id="vbtn-solid"     onclick="setViewMode('solid')">Solid</button>
+      <button class="view-btn"        id="vbtn-wireframe" onclick="setViewMode('wireframe')">Wireframe</button>
+    </div>
+    <div class="nav-cube">
+      <span class="nav-face" onclick="setCamView('top')">TOP</span>
+      <span class="nav-face" onclick="setCamView('front')">FRONT</span>
+      <span class="nav-face" onclick="setCamView('side')">SIDE</span>
+      <span class="nav-face" onclick="setCamView('iso')">ISO</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chat panel (right side) ── -->
+<div class="chat-panel">
+  <div class="chat-header">
+    <span class="chat-title" id="chat-title">New Creation</span>
+    <div class="exec-badge">
+      <div class="dot" id="exec-dot"></div>
+      <span id="exec-label">Checking…</span>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0">
+      描述你的项目需求，Claude 将自动规划、选型并生成 CAD 模型。
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="image-attach-preview" id="attach-preview"></div>
+    <div class="input-box">
+      <textarea id="prompt-input" placeholder="描述你的硬件项目或设计需求…（⌘↵ 发送）" rows="3"></textarea>
+      <div class="input-controls">
+        <button class="attach-btn" onclick="triggerImageUpload()" title="附加图片">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <input type="file" id="image-input" accept="image/*" multiple style="display:none" onchange="handleImageFiles(this.files)">
+        <div class="spacer"></div>
+        <select class="model-select" id="provider-select" onchange="onProviderSelectChange()">
+          <option value="claude-cli">Claude CLI</option>
+          <option value="gemini">Gemini</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="openai">OpenAI-compat</option>
+        </select>
+        <button class="send-btn" id="send-btn" onclick="send()" title="发送 (⌘↵)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="chat-stage-bar" id="chat-stage-bar">
+    <div class="project-stage-steps" id="stage-steps">
+      <div class="stage-step active" data-stage="requirements"></div>
+      <div class="stage-step" data-stage="components"></div>
+      <div class="stage-step" data-stage="cad"></div>
+      <div class="stage-step" data-stage="firmware"></div>
+      <div class="stage-step" data-stage="pcb"></div>
+      <div class="stage-step" data-stage="assembly"></div>
+    </div>
+    <div class="project-stage-name" id="stage-name">需求分析</div>
+  </div>
+</div>
 
 <!-- ── Code modal ── -->
 <div class="modal-overlay" id="code-modal" onclick="if(event.target===this)closeCode()">
@@ -758,6 +1170,10 @@
         <label class="field-label">Base URL</label>
         <input class="field-input" id="cfg-baseurl" type="text" placeholder="http://localhost:11434">
       </div>
+      <div class="field-row">
+        <label class="field-label">Gemini Key (CAD生成)</label>
+        <input class="field-input" id="cfg-cadapikey" type="password" placeholder="AIza…（用于3D建模生成）">
+      </div>
       <div class="settings-actions">
         <button class="save-btn" onclick="saveSettings()">Save</button>
         <button class="cancel-btn" onclick="closeSettings()">Cancel</button>
@@ -786,13 +1202,8 @@ let paramDebounce = null
 let scene, camera, renderer, controls, stlLoader
 let currentMesh   = null
 
-// ── Panel / mode helpers ───────────────────────────────────────────────────────
-window.setMode = (m) => {
-  mode = m
-  document.getElementById('btn-new').classList.toggle('active', m === 'new')
-  document.getElementById('btn-refine').classList.toggle('active', m === 'refine')
-}
-setMode('new')
+// ── Conversation history (for agent multi-turn) ────────────────────────────────
+let agentHistory = []   // [{role, content}] — Anthropic message format
 
 // ── Three.js init (non-blocking) ───────────────────────────────────────────────
 function resize() {
@@ -888,40 +1299,58 @@ try {
   document.getElementById('viewer-empty').innerHTML = `<span style="color:var(--text-muted);font-size:12px">3D error: ${e.message}</span>`
 }
 
-// ── Image attachment ───────────────────────────────────────────────────────────
-let attachedImage = null  // { base64, mimeType, dataUrl }
+// ── Image attachment (multi-image, drag-and-drop, paste) ──────────────────────
+let attachedImages = []  // [{ base64, mimeType, dataUrl }, ...]
 
 window.triggerImageUpload = () => document.getElementById('image-input').click()
 
-window.handleImageFile = (file) => {
-  if (!file) return
+function addImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) return
   const reader = new FileReader()
   reader.onload = (e) => {
-    const dataUrl = e.target.result
+    const dataUrl  = e.target.result
     const mimeType = file.type || 'image/png'
-    const base64 = dataUrl.split(',')[1]
-    attachedImage = { base64, mimeType, dataUrl }
+    const base64   = dataUrl.split(',')[1]
+    attachedImages.push({ base64, mimeType, dataUrl })
     renderAttachPreview()
   }
   reader.readAsDataURL(file)
 }
 
+window.handleImageFiles = (files) => {
+  Array.from(files).forEach(addImageFile)
+}
+
 function renderAttachPreview() {
   const el = document.getElementById('attach-preview')
   el.innerHTML = ''
-  if (!attachedImage) return
-  const wrap = document.createElement('div'); wrap.className = 'thumb-wrap'
-  const img  = document.createElement('img')
-  img.src = attachedImage.dataUrl
-  const rm = document.createElement('button'); rm.className = 'img-remove-btn'
-  rm.textContent = '✕'; rm.onclick = () => { attachedImage = null; renderAttachPreview() }
-  wrap.append(img, rm); el.appendChild(wrap)
+  attachedImages.forEach((img, i) => {
+    const wrap = document.createElement('div'); wrap.className = 'thumb-wrap'
+    const imgEl = document.createElement('img'); imgEl.src = img.dataUrl
+    const rm    = document.createElement('button'); rm.className = 'img-remove-btn'
+    rm.textContent = '✕'
+    rm.onclick = () => { attachedImages.splice(i, 1); renderAttachPreview() }
+    wrap.append(imgEl, rm); el.appendChild(wrap)
+  })
 }
 
-// paste image
+// Paste
 document.addEventListener('paste', (e) => {
-  const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))
-  if (item) window.handleImageFile(item.getAsFile())
+  Array.from(e.clipboardData.items)
+    .filter(i => i.type.startsWith('image/'))
+    .forEach(i => addImageFile(i.getAsFile()))
+})
+
+// Drag-and-drop on the input box
+const inputBox = document.querySelector('.input-box')
+inputBox.addEventListener('dragover',  (e) => { e.preventDefault(); inputBox.classList.add('drag-over') })
+inputBox.addEventListener('dragleave', (e) => { if (!inputBox.contains(e.relatedTarget)) inputBox.classList.remove('drag-over') })
+inputBox.addEventListener('drop', (e) => {
+  e.preventDefault()
+  inputBox.classList.remove('drag-over')
+  Array.from(e.dataTransfer.files)
+    .filter(f => f.type.startsWith('image/'))
+    .forEach(addImageFile)
 })
 
 // ── Chat helpers ───────────────────────────────────────────────────────────────
@@ -940,17 +1369,103 @@ function addMsg(type, content) {
   return wrap
 }
 
-function addUserMsg(text, imageDataUrl) {
+function addUserMsg(text, imageDataUrls) {
   const wrap = document.createElement('div')
   wrap.className = 'msg-wrap user'
-  if (imageDataUrl) {
+  const urls = Array.isArray(imageDataUrls) ? imageDataUrls : (imageDataUrls ? [imageDataUrls] : [])
+  if (urls.length > 0) {
     const imgs = document.createElement('div'); imgs.className = 'msg-images'
-    const img  = document.createElement('img'); img.src = imageDataUrl
-    imgs.appendChild(img); wrap.appendChild(imgs)
+    urls.forEach(url => {
+      const img = document.createElement('img'); img.src = url
+      imgs.appendChild(img)
+    })
+    wrap.appendChild(imgs)
   }
   const bubble = document.createElement('div'); bubble.className = 'msg-bubble'
   bubble.textContent = text
   wrap.appendChild(bubble)
+  messagesEl.appendChild(wrap)
+  messagesEl.scrollTop = messagesEl.scrollHeight
+}
+
+// ── Assessment questions card ───────────────────────────────────────────────────
+function renderAssessment(questions) {
+  const card = document.createElement('div')
+  card.className = 'assessment-card'
+
+  const title = document.createElement('h4')
+  title.textContent = '在开始之前，请回答以下问题：'
+  card.appendChild(title)
+
+  const answers = {}
+
+  questions.forEach(q => {
+    const qEl = document.createElement('div')
+    qEl.className = 'assessment-q'
+
+    const label = document.createElement('div')
+    label.className = 'q-label'
+    // Support multiple possible field names from LLM
+    label.textContent = q.question || q.text || q.label || q.title || q.id || ''
+    if (!label.textContent) console.warn('[assessment] missing question text in:', q)
+    qEl.appendChild(label)
+
+    const opts = document.createElement('div')
+    opts.className = 'assessment-opts'
+
+    // Normalize options — LLM may return array, object, or string
+    let optList = q.options
+    if (!Array.isArray(optList)) {
+      if (optList && typeof optList === 'object') {
+        // e.g. { none: "不会焊接", basic: "会基础焊接" }
+        optList = Object.entries(optList).map(([k, v]) => ({ value: k, label: String(v) }))
+      } else {
+        optList = []
+      }
+    }
+
+    optList.forEach(opt => {
+      const btn = document.createElement('button')
+      btn.className = 'assessment-opt'
+      btn.textContent = typeof opt === 'string' ? opt : (opt.label || opt.value || String(opt))
+      const val = typeof opt === 'string' ? opt : (opt.value || opt.label || String(opt))
+      btn.onclick = () => {
+        // Single select per question
+        opts.querySelectorAll('.assessment-opt').forEach(b => b.classList.remove('selected'))
+        btn.classList.add('selected')
+        answers[q.id] = { label: btn.textContent, value: val }
+        // Enable confirm if all answered
+        const allAnswered = questions.every(qq => answers[qq.id])
+        confirmBtn.classList.toggle('ready', allAnswered)
+        confirmBtn.disabled = !allAnswered
+      }
+      opts.appendChild(btn)
+    })
+    qEl.appendChild(opts)
+    card.appendChild(qEl)
+  })
+
+  const confirmBtn = document.createElement('button')
+  confirmBtn.className = 'assessment-confirm'
+  confirmBtn.textContent = '确认并继续 →'
+  confirmBtn.disabled = true
+  confirmBtn.onclick = () => {
+    // Build answer text and send as user message
+    const lines = questions.map(q => `${q.question} → ${answers[q.id]?.label ?? '未回答'}`)
+    const text = lines.join('\n')
+    card.style.opacity = '0.5'
+    card.style.pointerEvents = 'none'
+    confirmBtn.textContent = '已确认'
+    // Fill input and send
+    const input = document.getElementById('prompt-input')
+    input.value = text
+    send()
+  }
+  card.appendChild(confirmBtn)
+
+  const wrap = document.createElement('div')
+  wrap.className = 'msg-wrap assistant'
+  wrap.appendChild(card)
   messagesEl.appendChild(wrap)
   messagesEl.scrollTop = messagesEl.scrollHeight
 }
@@ -1024,8 +1539,9 @@ function finishLog(title) {
     logCard.header.classList.remove('running')
     logCard.chev.classList.remove('open')
   }
-  if (logBody) logBody.classList.remove('open')
   lastLogLine = null
+  logCard = null
+  logBody = null
 }
 
 function addObjectCard(version, sessionId, code, metrics, printability, provider) {
@@ -1191,6 +1707,15 @@ window.copyCode   = () => navigator.clipboard.writeText(latestCodeForModal).catc
 // ── Generate (SSE) ─────────────────────────────────────────────────────────────
 let versionCounter = 0
 
+// Tool name labels for the log
+const TOOL_LABELS = {
+  set_project_plan:    '📋 规划项目',
+  add_to_bom:          '🔧 添加物料',
+  generate_cad_model:  '📦 3D 建模',
+  search_component:    '🔍 搜索元件',
+  ask_user_assessment: '📝 用户评估',
+}
+
 window.send = async function() {
   if (busy) return
   const input = document.getElementById('prompt-input')
@@ -1199,23 +1724,63 @@ window.send = async function() {
 
   busy = true
   document.getElementById('send-btn').disabled = true
-  const imgSnapshot = attachedImage ? { ...attachedImage } : null
+  const imgSnapshots = [...attachedImages]
   input.value = ''
-  attachedImage = null; renderAttachPreview()
+  attachedImages = []; renderAttachPreview()
 
-  addUserMsg(desc, imgSnapshot?.dataUrl)
+  addUserMsg(desc, imgSnapshots.map(i => i.dataUrl))
+
+  // Always use agent mode (claude -p gateway, no API key needed)
+  const isAgentMode = true
+
   startLog()
   appendLog('Connecting…')
 
   try {
-    const body = {
-      description: desc,
-      sessionId,
-      mode: (mode === 'refine' && sessionId) ? 'refine' : 'new',
-      ...(imgSnapshot ? { imageBase64: imgSnapshot.base64, imageMimeType: imgSnapshot.mimeType } : {}),
+    let res, reader, dec = new TextDecoder(), buf = ''
+
+    if (isAgentMode) {
+      // ── Agent mode: Claude orchestrates via tool use ──
+      // Add user message to history (simple text content)
+      const firstImg = imgSnapshots[0] || null
+      const userContent = firstImg
+        ? [{ type: 'image', source: { type: 'base64', media_type: firstImg.mimeType, data: firstImg.base64 } }, { type: 'text', text: desc }]
+        : desc
+      agentHistory.push({ role: 'user', content: userContent })
+
+      res = await fetch('/api/agent', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          message: desc, sessionId,
+          // Strip image data from history to keep payload small; only send current image
+          history: agentHistory.slice(0, -1).map(m => {
+            if (!Array.isArray(m.content)) return m
+            return { ...m, content: m.content.map(c => c.type === 'image' ? { type: 'text', text: '[image attached]' } : c) }
+          }),
+          ...(firstImg ? { imageBase64: firstImg.base64, imageMimeType: firstImg.mimeType } : {}),
+        }),
+      })
+    } else {
+      // ── Direct CAD mode: generate OpenSCAD directly ──
+      const firstImg = imgSnapshots[0] || null
+      res = await fetch('/api/generate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          description: desc, sessionId,
+          mode: sessionId ? 'refine' : 'new',
+          ...(firstImg ? { imageBase64: firstImg.base64, imageMimeType: firstImg.mimeType } : {}),
+        }),
+      })
     }
-    const res    = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => `HTTP ${res.status}`)
+      throw new Error(`服务器错误 ${res.status}: ${errText.slice(0, 200)}`)
+    }
+    reader = res.body.getReader()
+    let assistantText = ''
 
     while (true) {
       const { done, value } = await reader.read(); if (done) break
@@ -1224,46 +1789,117 @@ window.send = async function() {
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue
         const evt = JSON.parse(line.slice(6))
+
         if (evt.type === 'log') {
           appendLog(evt.text)
+
         } else if (evt.type === 'code') {
           latestCode = evt.code
-          appendLog('Code ready')
-        } else if (evt.type === 'done') {
+
+        } else if (evt.type === 'tool_call') {
+          appendLog(`${TOOL_LABELS[evt.tool] ?? evt.tool}…`)
+
+        } else if (evt.type === 'tool_result') {
+          const ok = evt.result?.ok !== false
+          appendLog(evt.result?.message ?? `${evt.tool} done`, ok ? 'done' : 'err')
+
+        } else if (evt.type === 'tool_error') {
+          appendLog(`${evt.tool} 失败: ${evt.error}`, 'err')
+
+        } else if (evt.type === 'assessment') {
+          renderAssessment(evt.questions)
+
+        } else if (evt.type === 'text') {
+          assistantText += evt.text
+
+        } else if (evt.type === 'bom_update') {
+          // Auto-add items to BOM panel
+          ;(evt.items || []).forEach(item => {
+            if (!bomItems.find(b => b.name.toLowerCase() === item.name.toLowerCase()))
+              bomItems.push({ name: item.name, qty: item.qty || 1, source: 'lcsc' })
+          })
+          saveBOM(); renderBOM()
+          // Flash BOM icon
+          const tb = document.getElementById('tbtn-bom')
+          if (tb) { tb.style.color = 'var(--success)'; setTimeout(() => tb.style.color = '', 1500) }
+
+        } else if (evt.type === 'project_plan') {
+          // Populate the project panel
+          renderProjectResults({ summary: evt.summary, requirements: evt.requirements })
+          document.getElementById('project-cad-btn').disabled = false
+          switchTool('project')
+
+        } else if (evt.type === 'stage_update') {
+          updateStageBar(evt.stage)
+
+        } else if (evt.type === 'cad_update') {
+          // CAD model ready — update viewer
           sessionId = evt.sessionId
           localStorage.setItem('cad-session', sessionId)
           versionCounter++
-          finishLog(`Done — ${evt.rounds} round${evt.rounds>1?'s':''}`)
-          const cfg = await fetch('/api/ai-config').then(r=>r.json()).catch(()=>({}))
-          addObjectCard(versionCounter, sessionId, latestCode, evt.metrics, evt.printability, cfg.provider || 'claude-cli')
+          finishLog(`3D 模型完成 — ${evt.rounds} 轮`)
+          addObjectCard(versionCounter, sessionId, latestCode, evt.metrics, evt.printability, 'agent')
           loadSTL(sessionId)
           showRenders(sessionId, evt.renderViews || [])
-          setMode('refine')
           document.getElementById('chat-title').textContent = desc.slice(0, 40)
           document.getElementById('stl-btn').disabled = false
-          // Parse and show parameters
           const params = parseParams(latestCode)
           for (const [k, v] of Object.entries(params)) currentParams[k] = { ...v, original: v.value }
           renderParams(currentParams)
-          // Refresh sidebar
           loadSessions()
+          switchTool('cad')
+
+        } else if (evt.type === 'done') {
+          if (!isAgentMode) {
+            // Legacy direct mode done event
+            sessionId = evt.sessionId
+            localStorage.setItem('cad-session', sessionId)
+            versionCounter++
+            finishLog(`完成 — ${evt.rounds} 轮`)
+            const cfg = await fetch('/api/ai-config').then(r=>r.json()).catch(()=>({}))
+            addObjectCard(versionCounter, sessionId, latestCode, evt.metrics, evt.printability, cfg.provider || 'claude-cli')
+            loadSTL(sessionId); showRenders(sessionId, evt.renderViews || [])
+            document.getElementById('chat-title').textContent = desc.slice(0, 40)
+            document.getElementById('stl-btn').disabled = false
+            const params = parseParams(latestCode)
+            for (const [k, v] of Object.entries(params)) currentParams[k] = { ...v, original: v.value }
+            renderParams(currentParams)
+            loadSessions()
+          } else {
+            // agent mode — persist sessionId so next turn reuses same session
+            if (evt.sessionId) {
+              sessionId = evt.sessionId
+              localStorage.setItem('cad-session', sessionId)
+            }
+          }
+
         } else if (evt.type === 'error') {
-          appendLog(`Error: ${evt.text}`, 'err')
-          finishLog('Failed')
+          appendLog(`错误: ${evt.text}`, 'err')
+          finishLog('失败')
           addMsg('error', evt.text)
         }
       }
     }
+
+    // Show Claude's final text response as a chat bubble
+    if (assistantText.trim()) {
+      addMsg('assistant', assistantText.trim())
+      // Add assistant reply to history for multi-turn
+      agentHistory.push({ role: 'assistant', content: assistantText.trim() })
+    }
+    // Always ensure log card is closed (in case done event was missed)
+    finishLog('完成')
+
   } catch(e) {
-    appendLog(`Request failed: ${e.message}`, 'err')
-    finishLog('Failed')
+    appendLog(`请求失败: ${e.message}`, 'err')
+    finishLog('失败')
   }
   busy = false
   document.getElementById('send-btn').disabled = false
 }
 
 document.getElementById('prompt-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send() }
 })
 
 // ── Status check ───────────────────────────────────────────────────────────────
@@ -1326,17 +1962,20 @@ async function loadSession(asset) {
 
 window.newSession = () => {
   sessionId = null
+  agentHistory = []
   localStorage.removeItem('cad-session')
-  setMode('new')
   document.getElementById('chat-title').textContent = 'New Creation'
-  document.getElementById('messages').innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0">Describe the part you want to design.<br>Optionally attach a reference image.</div>'
+  document.getElementById('messages').innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0">描述你的项目需求，Claude 将自动规划、选型并生成 CAD 模型。</div>'
   document.getElementById('params-list').innerHTML = '<div class="params-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Generate a model to see its parameters here</div>'
   document.getElementById('renders-strip').innerHTML = ''
   document.getElementById('stl-btn').disabled = true
   if (currentMesh && scene) { scene.remove(currentMesh); currentMesh.geometry.dispose(); currentMesh = null }
   document.getElementById('viewer-empty').style.display = ''
-  currentParams = {}; versionCounter = 0
+  currentParams = {}; versionCounter = 0; latestCode = ''
   document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'))
+  document.getElementById('project-results').innerHTML = '<div style="padding:20px 14px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.7">在右侧对话框描述你的项目需求<br>Claude 将自动规划并推荐硬件</div>'
+  document.getElementById('project-cad-btn').disabled = true
+  updateStageBar('requirements')
 }
 
 loadSessions()
@@ -1401,6 +2040,200 @@ window.saveSettings = async function() {
     setTimeout(closeSettings, 600)
   } catch(e) { st.textContent = `Error: ${e.message}`; st.style.color = 'var(--danger)' }
 }
+
+// ── Tool bar switching ──────────────────────────────────────────────────────────
+window.switchTool = function(id) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'))
+  document.getElementById(`panel-${id}`).classList.add('active')
+  document.getElementById(`tbtn-${id}`).classList.add('active')
+}
+
+// ── Project planning ────────────────────────────────────────────────────────────
+let projectData = null   // last analysis result
+
+const STAGE_NAMES = {
+  requirements: '需求分析',
+  components:   '硬件选型',
+  cad:          'CAD 设计',
+  firmware:     '固件开发',
+  pcb:          'PCB 设计',
+  assembly:     '组装测试',
+}
+const STAGE_ORDER = ['requirements', 'components', 'cad', 'firmware', 'pcb', 'assembly']
+
+function updateStageBar(stage) {
+  const idx = STAGE_ORDER.indexOf(stage)
+  if (idx === -1) return
+  const steps = document.querySelectorAll('#stage-steps .stage-step')
+  steps.forEach((el, i) => {
+    el.classList.remove('done', 'active')
+    if (i < idx) el.classList.add('done')
+    else if (i === idx) el.classList.add('active')
+  })
+  document.getElementById('stage-name').textContent = STAGE_NAMES[stage] ?? stage
+}
+
+function renderProjectResults(data) {
+  const results = document.getElementById('project-results')
+  let html = ''
+
+  // Summary
+  if (data.summary) {
+    html += `<div class="project-section">
+      <div class="project-section-label">项目概述</div>
+      <div class="project-summary">${escHtml(data.summary)}</div>
+    </div>`
+  }
+
+  // Requirements
+  if (data.requirements?.length) {
+    html += `<div class="project-section">
+      <div class="project-section-label">功能需求（${data.requirements.length}）</div>
+      <div>${data.requirements.map(r =>
+        `<div class="req-item"><div class="req-bullet"></div><span>${escHtml(r)}</span></div>`
+      ).join('')}</div>
+    </div>`
+  }
+
+  // Hardware
+  if (data.hardware?.length) {
+    html += `<div class="project-section">
+      <div class="project-section-label">推荐硬件（${data.hardware.length} 个）</div>
+      ${data.hardware.map((hw, i) => `
+        <div class="hw-card" id="hwcard-${i}">
+          <div class="hw-card-top">
+            <span class="hw-type-badge">${escHtml(hw.type)}</span>
+            <span class="hw-name">${escHtml(hw.name)}</span>
+            <span class="hw-qty">×${hw.qty || 1}</span>
+          </div>
+          <div class="hw-reason">${escHtml(hw.reason)}</div>
+          <div class="hw-actions">
+            <button class="hw-add-btn" id="hw-add-${i}" onclick="addHwToBOM(${i})">+ 加入 BOM</button>
+            <a class="hw-lcsc-btn" href="https://www.lcsc.com/search?q=${encodeURIComponent(hw.search || hw.name)}" target="_blank">LCSC ↗</a>
+          </div>
+        </div>
+      `).join('')}
+    </div>`
+  }
+
+  results.innerHTML = html
+}
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+window.addHwToBOM = function(i) {
+  if (!projectData?.hardware?.[i]) return
+  const hw  = projectData.hardware[i]
+  const btn = document.getElementById(`hw-add-${i}`)
+  if (btn.classList.contains('added')) return
+  bomItems.push({ name: hw.name, qty: hw.qty || 1, source: 'lcsc' })
+  saveBOM(); renderBOM()
+  btn.textContent = '✓ 已加入 BOM'
+  btn.classList.add('added')
+  // Flash BOM button in toolbar
+  const tbom = document.getElementById('tbtn-bom')
+  tbom.style.color = 'var(--success)'
+  setTimeout(() => tbom.style.color = '', 1500)
+}
+
+window.goToCAD = function() {
+  if (!projectData) return
+  // Pre-fill the chat input with the project description
+  const input = document.getElementById('prompt-input')
+  if (input && projectData.summary) {
+    input.value = projectData.summary
+  }
+  switchTool('cad')
+  // Also switch main view to chat
+  document.getElementById('prompt-input').focus()
+}
+
+// ── BOM ────────────────────────────────────────────────────────────────────────
+let bomItems = JSON.parse(localStorage.getItem('hw-bom') || '[]')
+// [{name, qty, source}]
+
+function saveBOM() { localStorage.setItem('hw-bom', JSON.stringify(bomItems)) }
+
+function lcscLink(name) {
+  return `https://www.lcsc.com/search?q=${encodeURIComponent(name)}`
+}
+
+function renderBOM() {
+  const list  = document.getElementById('bom-list')
+  const empty = document.getElementById('bom-empty')
+  list.querySelectorAll('.bom-item').forEach(el => el.remove())
+  if (bomItems.length === 0) { if (empty) empty.style.display = 'flex'; return }
+  if (empty) empty.style.display = 'none'
+  bomItems.forEach((item, i) => {
+    const row = document.createElement('div'); row.className = 'bom-item'
+    const qty = document.createElement('input')
+    qty.type = 'number'; qty.min = 1; qty.value = item.qty; qty.className = 'bom-qty'
+    qty.onchange = () => { bomItems[i].qty = parseInt(qty.value) || 1; saveBOM() }
+    const name = document.createElement('span'); name.className = 'bom-name'; name.textContent = item.name
+    name.title = item.name
+    const src = document.createElement('a'); src.className = 'bom-source'
+    src.href = lcscLink(item.name); src.target = '_blank'; src.textContent = 'LCSC'
+    const del = document.createElement('button'); del.className = 'bom-del'; del.textContent = '✕'
+    del.onclick = () => { bomItems.splice(i, 1); saveBOM(); renderBOM() }
+    row.append(qty, name, src, del)
+    list.insertBefore(row, document.getElementById('bom-empty'))
+  })
+}
+
+window.addBOMItem = function() {
+  const inp = document.getElementById('bom-name-input')
+  const name = inp.value.trim(); if (!name) return
+  bomItems.push({ name, qty: 1, source: 'lcsc' })
+  saveBOM(); renderBOM()
+  inp.value = ''
+}
+
+window.exportBOM = function() {
+  if (bomItems.length === 0) return
+  const csv = 'Qty,Component,LCSC Link\n' + bomItems.map(i =>
+    `${i.qty},"${i.name}","${lcscLink(i.name)}"`
+  ).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+  a.download = 'bom.csv'; a.click()
+}
+
+window.generateBOM = async function() {
+  if (!latestCode) { alert('Generate a CAD model first.'); return }
+  const btn = document.getElementById('bom-gen-btn')
+  btn.textContent = '✦ Generating…'; btn.disabled = true
+  try {
+    const res = await fetch('/api/generate-bom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: latestCode, sessionId })
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.items)) {
+        data.items.forEach(item => {
+          if (!bomItems.find(b => b.name.toLowerCase() === item.name.toLowerCase()))
+            bomItems.push({ name: item.name, qty: item.qty || 1, source: 'lcsc' })
+        })
+        saveBOM(); renderBOM()
+      }
+    } else {
+      // Fallback: parse from description
+      btn.textContent = '✦ Auto-generate from current design'
+      btn.disabled = false
+      alert('BOM generation requires the AI endpoint. Add components manually for now.')
+    }
+  } catch {
+    btn.textContent = '✦ Auto-generate from current design'
+    btn.disabled = false
+  }
+  btn.textContent = '✦ Auto-generate from current design'; btn.disabled = false
+}
+
+renderBOM()
 
 </script>
 </body>
