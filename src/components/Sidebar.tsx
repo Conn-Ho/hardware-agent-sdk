@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Plus, LogOut, Crown, Settings, LayoutGrid } from 'lucide-react';
+import {
+  Menu,
+  Plus,
+  LogOut,
+  Settings,
+  LayoutGrid,
+  Package,
+  Cpu,
+  Camera,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -197,6 +206,27 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
                 description: 'View past creations',
                 submenu: recentConversations,
               },
+              {
+                icon: Package,
+                label: 'Components',
+                href: '/components',
+                description: 'Search LCSC, Waveshare, DFRobot',
+                submenu: [],
+              },
+              {
+                icon: Cpu,
+                label: 'Firmware Loop',
+                href: '/firmware',
+                description: 'Compile, flash, monitor, auto-fix',
+                submenu: [],
+              },
+              {
+                icon: Camera,
+                label: 'Vision',
+                href: '/vision',
+                description: 'Camera-based hardware inspection',
+                submenu: [],
+              },
             ].map(({ icon: Icon, label, href, description, submenu }) => (
               <div key={label} className="space-y-1">
                 <ConditionalWrapper
@@ -381,12 +411,6 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => sidebarNavigate('/subscription')}
-                  >
-                    <Crown className="mr-2 h-4 w-4" />
-                    <span>Subscriptions</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import posthog from 'posthog-js';
 import { AuthContext } from './AuthContext';
 
 const ensurePermission = async () => {
@@ -16,6 +15,11 @@ const ensurePermission = async () => {
   return perm === 'granted';
 };
 
+const DEV_BYPASS_AUTH =
+  import.meta.env.DEV && import.meta.env.VITE_BYPASS_AUTH === 'true';
+const DEV_EMAIL = 'dev@local.dev';
+const DEV_PASSWORD = 'devpassword123';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(
     JSON.parse(localStorage.getItem('session') ?? 'null'),
@@ -23,13 +27,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const posthogSent = useRef(false);
   const queryClient = useQueryClient();
 
   // Initialize auth state and set up session listener
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        if (DEV_BYPASS_AUTH) {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: DEV_EMAIL,
+            password: DEV_PASSWORD,
+          });
+          if (!error && data.session) {
+            setSession(data.session);
+            localStorage.setItem('session', JSON.stringify(data.session));
+            setUser(data.session.user);
+            return;
+          }
+        }
         const {
           data: { session },
         } = await supabase.auth.refreshSession();
@@ -58,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   // Fetch user's subscription and usage data when user is available
-  const { data: userExtraData, isLoading: isUserExtraDataLoading } = useQuery({
+  useQuery({
     queryKey: ['userExtraData'],
     enabled: !!user,
     refetchInterval: 30000,
@@ -100,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, queryClient]);
 
   // Fetch user's profile data directly (avoiding circular dependency)
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -177,24 +192,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, queryClient, navigate, profile?.notifications_enabled]);
 
-  // Track user in PostHog once we have all their data
-  useEffect(() => {
-    if (
-      user &&
-      !posthogSent.current &&
-      !isUserExtraDataLoading &&
-      !isProfileLoading
-    ) {
-      posthog.identify(user.id, {
-        email: user.email,
-        full_name: profile?.full_name,
-        subscription: userExtraData?.sublevel ?? 'free',
-        has_trialed: userExtraData?.hasTrialed ?? false,
-      });
-      posthogSent.current = true;
-    }
-  }, [user, isUserExtraDataLoading, userExtraData, profile, isProfileLoading]);
-
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -249,16 +246,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         user,
-        hasTrialed: userExtraData?.hasTrialed ?? true,
-        subscription: userExtraData?.sublevel ?? 'free',
-        subscriptionTokens: userExtraData?.subscriptionTokens ?? 0,
-        purchasedTokens: userExtraData?.purchasedTokens ?? 0,
-        totalTokens: userExtraData?.totalTokens ?? 0,
-        subscriptionTokenLimit: userExtraData?.subscriptionTokenLimit ?? 50,
-        subscriptionExpiresAt: userExtraData?.subscriptionExpiresAt ?? null,
-        // Consider auth loading, user data loading, and profile loading states
-        isLoading:
-          isLoading || (!!user && (isUserExtraDataLoading || isProfileLoading)),
+        hasTrialed: false,
+        subscription: 'free',
+        subscriptionTokens: 0,
+        purchasedTokens: 0,
+        totalTokens: 0,
+        subscriptionTokenLimit: 0,
+        subscriptionExpiresAt: null,
+        isLoading: isLoading,
         signIn,
         signUp,
         signInWithMagicLink,

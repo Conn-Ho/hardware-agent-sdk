@@ -1,20 +1,13 @@
-import * as Sentry from '@sentry/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   createBrowserRouter,
-  createRoutesFromChildren,
-  matchRoutes,
   Navigate,
   Outlet,
   RouterProvider,
-  useLocation,
-  useNavigationType,
 } from 'react-router-dom';
 import App from './App.tsx';
-import { PostHogProvider } from 'posthog-js/react';
 import './index.css';
-import React from 'react';
 import { ErrorView } from './views/ErrorView.tsx';
 import { SignInView } from './views/SignInView.tsx';
 import { SignUpView } from './views/SignUpView.tsx';
@@ -25,32 +18,16 @@ import { UpdatePasswordView } from './views/UpdatePasswordView.tsx';
 import { TermsOfServiceView } from './views/TermsOfServiceView.tsx';
 import EmailConfirmation from './views/EmailConfirmation.tsx';
 import { PromptView } from './views/PromptView.tsx';
-import { SubscriptionView } from './views/SubscriptionView.tsx';
 import { HistoryView } from './views/HistoryView.tsx';
 import { AuthGuard } from './components/auth/AuthGuard.tsx';
 import { Layout } from './components/Layout.tsx';
 import ShareView from './views/ShareView.tsx';
 import EditorView from './views/EditorView.tsx';
 import SettingsView from './views/SettingsView.tsx';
+import { ComponentSearchView } from './views/ComponentSearchView.tsx';
+import { FirmwareLoopView } from './views/FirmwareLoopView.tsx';
+import { VisionView } from './views/VisionView.tsx';
 import { isSupabaseConfigMissing } from './lib/supabase.ts';
-
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN ?? '',
-  integrations: [
-    Sentry.reactRouterV6BrowserTracingIntegration({
-      useEffect: React.useEffect,
-      useLocation,
-      useNavigationType,
-      createRoutesFromChildren,
-      matchRoutes,
-    }),
-  ],
-  environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? 'local',
-  tracesSampleRate: 1.0,
-});
-
-const sentryCreateBrowserRouter =
-  Sentry.wrapCreateBrowserRouterV6(createBrowserRouter);
 
 const MissingConfig = () => (
   <div className="flex min-h-screen items-center justify-center bg-adam-bg-secondary-dark">
@@ -61,7 +38,7 @@ const MissingConfig = () => (
   </div>
 );
 
-const router = sentryCreateBrowserRouter(
+const router = createBrowserRouter(
   [
     {
       path: '/',
@@ -107,14 +84,24 @@ const router = sentryCreateBrowserRouter(
                   element: <HistoryView />,
                 },
                 {
-                  path: '/subscription',
-                  errorElement: <ErrorView />,
-                  element: <SubscriptionView />,
-                },
-                {
                   path: '/settings',
                   errorElement: <ErrorView />,
                   element: <SettingsView />,
+                },
+                {
+                  path: '/components',
+                  errorElement: <ErrorView />,
+                  element: <ComponentSearchView />,
+                },
+                {
+                  path: '/firmware',
+                  errorElement: <ErrorView />,
+                  element: <FirmwareLoopView />,
+                },
+                {
+                  path: '/vision',
+                  errorElement: <ErrorView />,
+                  element: <VisionView />,
                 },
               ],
             },
@@ -132,15 +119,7 @@ createRoot(document.getElementById('root')!).render(
     <MissingConfig />
   ) : (
     <StrictMode>
-      <PostHogProvider
-        apiKey={import.meta.env.VITE_POSTHOG_PROJECT_KEY ?? ''}
-        options={{
-          api_host: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jackson-pollock`,
-          person_profiles: 'always',
-        }}
-      >
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </PostHogProvider>
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </StrictMode>
   ),
 );
