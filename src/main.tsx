@@ -27,6 +27,8 @@ import SettingsView from './views/SettingsView.tsx';
 import { ComponentSearchView } from './views/ComponentSearchView.tsx';
 import { FirmwareLoopView } from './views/FirmwareLoopView.tsx';
 import { VisionView } from './views/VisionView.tsx';
+import { AgentPromptView } from './views/AgentPromptView.tsx';
+import AgentView from './views/AgentView.tsx';
 import { isSupabaseConfigMissing } from './lib/supabase.ts';
 
 const MissingConfig = () => (
@@ -102,6 +104,16 @@ const router = createBrowserRouter(
                   path: '/vision',
                   errorElement: <ErrorView />,
                   element: <VisionView />,
+                },
+                {
+                  path: '/agent',
+                  errorElement: <ErrorView />,
+                  element: <AgentPromptView />,
+                },
+                {
+                  path: '/agent/:id',
+                  errorElement: <ErrorView />,
+                  element: <AgentView />,
                 },
               ],
             },

@@ -9,6 +9,7 @@ import {
   Package,
   Cpu,
   Camera,
+  Robot,
 } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -224,6 +225,13 @@ function DesktopSidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
                 label: 'Vision',
                 href: '/vision',
                 description: 'Camera-based hardware inspection',
+                submenu: [],
+              },
+              {
+                icon: Robot,
+                label: 'Agent',
+                href: '/agent',
+                description: 'AI agent for full hardware design loop',
                 submenu: [],
               },
             ].map(({ icon: Icon, label, href, description, submenu }) => (
