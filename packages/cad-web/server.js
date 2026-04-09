@@ -1125,6 +1125,7 @@ ${TC_OPEN}{"name":"tool_name","input":{...}}${TC_CLOSE}
 CRITICAL JSON rules (output is length-limited — violations cause parse errors):
 - Use ONLY the fields defined in each tool's schema. NO extra fields.
 - Keep all string values SHORT (under 60 chars) EXCEPT: generate_cad_model.description and generate_assembly_guide fields may be as long as needed.
+- NEVER use literal line breaks inside JSON strings — use \\n (backslash-n) if you need a newline in a value.
 - For add_to_bom: use ONLY {name, qty, category, reason}. qty is an integer. NO quantity/unit/notes/shopUrl fields.
 - Do NOT pretty-print or indent JSON — output it all on one line.
 - After receiving the tool result, call the next tool or give your final response.
@@ -1174,24 +1175,22 @@ ${formatToolsBlock()}`
       // Parse and execute tool call
       const jsonStr = text.slice(tcStart + TC_OPEN.length, tcEnd).trim()
       let toolCall
-      try {
-        // Try direct parse first (handles well-formatted JSON with structural newlines)
-        try {
-          toolCall = JSON.parse(jsonStr)
-        } catch {
-          // Fall back: escape control chars only inside string literals (state machine)
-          toolCall = JSON.parse(escapeJsonStringLiterals(jsonStr))
-        }
-      } catch {
-        // Try to repair truncated JSON before giving up
-        const repaired = repairTruncatedJson(jsonStr)
-        if (repaired) {
-          try { toolCall = JSON.parse(repaired) } catch {}
-        }
-        if (!toolCall) {
-          emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 200)}` })
-          break
-        }
+
+      // Parse attempts in order of confidence
+      const parseCandidates = [
+        jsonStr,                                    // 1. direct (well-formed JSON)
+        escapeJsonStringLiterals(jsonStr),           // 2. escape literal control chars in strings
+        repairTruncatedJson(jsonStr),                // 3. escape + close unclosed strings/brackets
+      ]
+      for (const candidate of parseCandidates) {
+        if (!candidate) continue
+        try { toolCall = JSON.parse(candidate); break } catch {}
+      }
+
+      if (!toolCall) {
+        console.error(`[agent] tool parse FAIL. jsonStr(${jsonStr.length}):`, jsonStr.slice(0, 400))
+        emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 200)}` })
+        break
       }
 
       emit({ type: 'tool_call', tool: toolCall.name, input: toolCall.input })
