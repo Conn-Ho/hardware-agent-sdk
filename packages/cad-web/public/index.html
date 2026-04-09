@@ -2187,19 +2187,26 @@ async function loadSession(asset, clickedEl) {
   if (state?.assembly?.guide) renderAssemblyGuide(state.assembly.guide)
   loadBOM()
 
-  // Clear chat and show restoration summary
+  // Clear chat and restore conversation history
   messagesEl.innerHTML = ''
   agentHistory = []
 
-  // Show a context card in chat so the agent knows where we left off
-  const stageName = STAGE_NAMES[state?.stage] || state?.stage || '未知'
-  const bomList = (state?.bom || []).map(b => `• ${b.name} ×${(b.qty || b.quantity || 1)}`).join('\n') || '暂无'
-  const reqList = (state?.requirements || []).map(r => `• ${r}`).join('\n') || '暂无'
-  const restoreText = `📂 已恢复项目: ${desc}\n\n当前阶段: ${stageName}\n\n需求:\n${reqList}\n\nBOM:\n${bomList}${state?.cad?.generated ? '\n\n3D模型: ✅ 已生成' : ''}\n\n继续告诉我下一步要做什么。`
-  addMsg('assistant', restoreText)
-
-  // Prime agentHistory so next message has context
-  agentHistory = [{ role: 'assistant', content: restoreText }]
+  if (state?.history?.length) {
+    // Restore real saved conversation
+    agentHistory = state.history
+    for (const msg of state.history) {
+      const text = typeof msg.content === 'string' ? msg.content : ''
+      if (text) addMsg(msg.role === 'user' ? 'user' : 'assistant', text)
+    }
+  } else {
+    // Fallback: show a context summary card
+    const stageName = STAGE_NAMES[state?.stage] || state?.stage || '未知'
+    const bomList = (state?.bom || []).map(b => `• ${b.name} ×${(b.qty || b.quantity || 1)}`).join('\n') || '暂无'
+    const reqList = (state?.requirements || []).map(r => `• ${r}`).join('\n') || '暂无'
+    const restoreText = `📂 已恢复项目: ${desc}\n\n当前阶段: ${stageName}\n\n需求:\n${reqList}\n\nBOM:\n${bomList}${state?.cad?.generated ? '\n\n3D模型: ✅ 已生成' : ''}\n\n继续告诉我下一步要做什么。`
+    addMsg('assistant', restoreText)
+    agentHistory = [{ role: 'assistant', content: restoreText }]
+  }
 
   // Update sidebar highlight
   document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'))

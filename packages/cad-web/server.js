@@ -1108,6 +1108,13 @@ app.post('/api/agent', async (req, res) => {
     state._imageMimeType = imageMimeType || 'image/png'
   }
   emit({ type: 'stage_update', stage: state.stage, state })
+  // Helper: strip base64 image data from history for storage (keep as text placeholder)
+  const stripImagesFromHistory = (msgs) => msgs.map(m => {
+    if (!Array.isArray(m.content)) return m
+    const stripped = m.content.map(c => c.type === 'image' ? { type: 'text', text: '[附件图片]' } : c)
+    const textOnly = stripped.filter(c => c.type === 'text').map(c => c.text).join(' ').trim()
+    return { role: m.role, content: textOnly || '[image]' }
+  })
 
   const toolsBlock = `
 ## Tools
@@ -1131,11 +1138,14 @@ ${formatToolsBlock()}`
     // Build conversation from history
     let ctx = ''
     for (const msg of history) {
-      const c = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+      const c = typeof msg.content === 'string' ? msg.content : msg.content.map?.(c => c.text || '').join(' ') || ''
       ctx += msg.role === 'user' ? `Human: ${c}\n\n` : `Assistant: ${c}\n\n`
     }
-    let userInput = ctx ? `${ctx}Human: ${message.trim()}` : message.trim()
+    // Append image note to current message so agent knows image was uploaded
+    const imageNote = imageBase64 ? '\n[用户附带了一张参考图片，图片已存储在服务器，将在调用 generate_cad_model 时自动传入 CAD 生成器]' : ''
+    let userInput = ctx ? `${ctx}Human: ${message.trim()}${imageNote}` : `${message.trim()}${imageNote}`
 
+    let finalAssistantText = ''
     emit({ type: 'log', text: '正在启动 Claude Agent…' })
 
     for (let iter = 0; iter < 12; iter++) {
@@ -1157,7 +1167,7 @@ ${formatToolsBlock()}`
 
       if (tcStart === -1 || tcEnd === -1) {
         // No tool call — final response
-        if (text) emit({ type: 'text', text })
+        if (text) { emit({ type: 'text', text }); finalAssistantText = text }
         break
       }
 
@@ -1198,6 +1208,18 @@ ${formatToolsBlock()}`
       // Build next turn: append tool exchange, then trim old exchanges to cap context size
       userInput = `${userInput}\n\nAssistant: ${TC_OPEN}${jsonStr}${TC_CLOSE}\n\nTool result (${toolCall.name}): ${JSON.stringify(toolResult)}\n\nHuman: Continue.`
       userInput = trimToolContext(userInput, 3)
+    }
+
+    // Persist conversation history to project state
+    if (finalAssistantText) {
+      const prevHistory = stripImagesFromHistory(history)
+      const updatedHistory = [
+        ...prevHistory,
+        { role: 'user', content: message.trim() + (imageBase64 ? ' [附件图片]' : '') },
+        { role: 'assistant', content: finalAssistantText },
+      ]
+      state.history = updatedHistory.slice(-40)  // keep last 40 messages (20 turns)
+      await saveProjectState(sessionId, state)
     }
 
     emit({ type: 'done', sessionId })
