@@ -64,34 +64,55 @@ Orientation: Study the provided render images to determine the model's "up" dire
 - Apply rotation to orient the model so it sits FLAT on any stand/base
 - Always include rotation parameters so the user can fine-tune`
 
-async function cadamGenerate(description, imageBase64, imageMimeType) {
+const LOCAL_CADAM_URL = process.env.CADAM_URL || 'http://localhost:3334'
+let _cadamLocalAvailable = null   // cached: true/false/null
+
+async function checkCadamLocal() {
+  if (_cadamLocalAvailable !== null) return _cadamLocalAvailable
+  try {
+    const r = await fetch(`${LOCAL_CADAM_URL}/health`, { signal: AbortSignal.timeout(1500) })
+    _cadamLocalAvailable = r.ok
+  } catch { _cadamLocalAvailable = false }
+  return _cadamLocalAvailable
+}
+
+async function cadamGenerate(description, imageBase64, imageMimeType, existingCode = null, error = null) {
+  // Prefer local CADAM server (uses real Anthropic API + proper credentials)
+  if (await checkCadamLocal()) {
+    const body = { description, existingCode, error }
+    if (imageBase64 && imageMimeType) { body.imageBase64 = imageBase64; body.imageMimeType = imageMimeType }
+    const res = await fetch(`${LOCAL_CADAM_URL}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120_000),
+    })
+    if (!res.ok) { const t = await res.text(); throw new Error(`CADAM ${res.status}: ${t.slice(0,300)}`) }
+    const data = await res.json()
+    if (data.code) return data.code
+    throw new Error(data.error || 'empty response from local CADAM')
+  }
+
+  // Fallback: call CADAM_BASE_URL directly (linkapi.org proxy)
   const content = []
   if (imageBase64 && imageMimeType) {
-    content.push({
-      type: 'image_url',
-      image_url: { url: `data:${imageMimeType};base64,${imageBase64}`, detail: 'high' },
-    })
+    content.push({ type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${imageBase64}`, detail: 'high' } })
   }
-  content.push({ type: 'text', text: description })
+  let prompt = String(description || '')
+  if (existingCode) prompt = `Current OpenSCAD code:\n${existingCode}\n\nModification: ${prompt}`
+  if (error)        prompt += `\n\nFix this OpenSCAD compilation error:\n${error}`
+  content.push({ type: 'text', text: prompt })
 
   const res = await fetch(`${CADAM_BASE_URL}/v1/chat/completions`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CADAM_API_KEY}` },
     body: JSON.stringify({
-      model:      CADAM_MODEL,
-      max_tokens: 8096,
-      messages: [
-        { role: 'system', content: STRICT_CODE_PROMPT },
-        { role: 'user',   content },
-      ],
+      model: CADAM_MODEL, max_tokens: 8096,
+      messages: [{ role: 'system', content: STRICT_CODE_PROMPT }, { role: 'user', content }],
     }),
     signal: AbortSignal.timeout(120_000),
   })
-
-  if (!res.ok) {
-    const txt = await res.text()
-    throw new Error(`API ${res.status}: ${txt.slice(0, 300)}`)
-  }
+  if (!res.ok) { const txt = await res.text(); throw new Error(`API ${res.status}: ${txt.slice(0, 300)}`) }
   const data = await res.json()
   let code = data.choices?.[0]?.message?.content?.trim() ?? ''
   code = code.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
@@ -765,47 +786,55 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
 
     case 'generate_cad_model': {
       const outputDir = path.join(OUTPUT_BASE, sessionId)
+      const MAX_ROUNDS = 3
 
-      // ── Generate OpenSCAD via embedded CADAM logic ────────────────────────────
-      sendEvent({ type: 'log', text: '🎨 生成 OpenSCAD 代码…' })
+      let code = null
+      let lastError = null
 
-      let code
-      try {
-        code = await cadamGenerate(
-          toolInput.description,
-          state._imageBase64   || null,
-          state._imageMimeType || null,
-        )
-      } catch (e) {
-        return { ok: false, error: e.message, message: `Code generation failed: ${e.message}` }
+      for (let round = 1; round <= MAX_ROUNDS; round++) {
+        sendEvent({ type: 'log', text: round === 1 ? '🎨 生成 OpenSCAD 代码…' : `🔧 修正代码 (第 ${round} 轮)…` })
+        try {
+          code = await cadamGenerate(
+            toolInput.description,
+            state._imageBase64   || null,
+            state._imageMimeType || null,
+            round > 1 ? code      : null,   // pass previous (failed) code on retry
+            round > 1 ? lastError : null,   // pass compilation error on retry
+          )
+        } catch (e) {
+          return { ok: false, error: e.message, message: `Code generation failed: ${e.message}` }
+        }
+
+        sendEvent({ type: 'code', code })
+        sendEvent({ type: 'log', text: `▶ 执行 OpenSCAD (第 ${round} 轮)…` })
+
+        const result = await executeCadCode(code)
+
+        if (result.success) {
+          await fs.mkdir(outputDir, { recursive: true })
+          const stlB64 = result.exports?.stl_b64
+          if (stlB64) {
+            await fs.writeFile(path.join(outputDir, 'model.stl'), Buffer.from(stlB64, 'base64'))
+          }
+          state.cad = { generated: true, description: toolInput.description, metrics: result.metrics ?? {} }
+          if (state.stage === 'cad') state.stage = 'firmware'
+          await saveProjectState(sessionId, state)
+          const meta = {
+            id: sessionId, description: toolInput.description, timestamp: Date.now(),
+            metrics: result.metrics ?? {}, printability: result.printability ?? {},
+            code, renders: [],
+          }
+          await fs.writeFile(path.join(outputDir, 'meta.json'), JSON.stringify(meta, null, 2))
+          sendEvent({ type: 'cad_update', sessionId, rounds: round, metrics: result.metrics ?? {}, printability: result.printability ?? {} })
+          sendEvent({ type: 'stage_update', stage: state.stage, state })
+          return { ok: true, rounds: round, metrics: result.metrics, message: `3D model generated in ${round} round(s). 3D viewer updated.` }
+        }
+
+        lastError = result.error
+        sendEvent({ type: 'log', text: `⚠ 编译错误: ${(lastError || '').slice(0, 120)}` })
       }
 
-      sendEvent({ type: 'code', code })
-      sendEvent({ type: 'log', text: '▶ 执行 OpenSCAD…' })
-
-      const result = await executeCadCode(code)
-
-      if (result.success) {
-        await fs.mkdir(outputDir, { recursive: true })
-        const stlB64 = result.exports?.stl_b64
-        if (stlB64) {
-          await fs.writeFile(path.join(outputDir, 'model.stl'), Buffer.from(stlB64, 'base64'))
-        }
-        state.cad = { generated: true, description: toolInput.description, metrics: result.metrics ?? {} }
-        if (state.stage === 'cad') state.stage = 'firmware'
-        await saveProjectState(sessionId, state)
-        const meta = {
-          id: sessionId, description: toolInput.description, timestamp: Date.now(),
-          metrics: result.metrics ?? {}, printability: result.printability ?? {},
-          code, renders: [],
-        }
-        await fs.writeFile(path.join(outputDir, 'meta.json'), JSON.stringify(meta, null, 2))
-        // renderViews omitted — rendered client-side via Three.js
-        sendEvent({ type: 'cad_update', sessionId, rounds: 1, metrics: result.metrics ?? {}, printability: result.printability ?? {} })
-        sendEvent({ type: 'stage_update', stage: state.stage, state })
-        return { ok: true, metrics: result.metrics, message: `3D model generated successfully. 3D viewer updated.` }
-      }
-      return { ok: false, error: result.error, message: `OpenSCAD error: ${result.error}\nFix the code and call generate_cad_model again with corrected code.` }
+      return { ok: false, error: lastError, message: `OpenSCAD failed after ${MAX_ROUNDS} rounds. Last error: ${lastError}` }
     }
 
     case 'search_component': {
