@@ -974,6 +974,37 @@ function escapeJsonStringLiterals(s) {
   return result
 }
 
+// Attempt to close truncated JSON by balancing brackets/braces and strings.
+function repairTruncatedJson(s) {
+  if (!s) return null
+  try { JSON.parse(s); return s } catch {}
+  let r = s.trimEnd()
+  // Remove trailing comma before closing
+  r = r.replace(/,\s*$/, '')
+  // Close unclosed string (odd number of unescaped quotes means open string)
+  let inStr = false, escaped = false
+  for (const c of r) {
+    if (escaped) { escaped = false; continue }
+    if (c === '\\') { escaped = true; continue }
+    if (c === '"') inStr = !inStr
+  }
+  if (inStr) r += '"'
+  // Walk and close open brackets/braces
+  const stack = []
+  inStr = false; escaped = false
+  for (const c of r) {
+    if (escaped) { escaped = false; continue }
+    if (c === '\\') { escaped = true; continue }
+    if (c === '"') { inStr = !inStr; continue }
+    if (!inStr) {
+      if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']')
+      else if ((c === '}' || c === ']') && stack.length) stack.pop()
+    }
+  }
+  while (stack.length) r += stack.pop()
+  try { JSON.parse(r); return r } catch { return null }
+}
+
 // Trim the growing tool-call context to prevent timeouts on later iterations.
 // Keeps the original user message + last N tool exchanges only.
 function trimToolContext(userInput, keepExchanges = 3) {
@@ -1074,11 +1105,16 @@ app.post('/api/agent', async (req, res) => {
   const toolsBlock = `
 ## Tools
 
-When you want to use a tool output ONLY this block (nothing else in that turn):
+When you want to use a tool output ONLY this exact block (nothing else in that turn):
 ${TC_OPEN}{"name":"tool_name","input":{...}}${TC_CLOSE}
 
-After receiving the tool result, call the next tool or give your final response.
-NEVER explain that you are calling a tool. NEVER wrap output in markdown.
+CRITICAL JSON rules (output is length-limited — violations cause parse errors):
+- Use ONLY the fields defined in each tool's schema. NO extra fields.
+- Keep all string values SHORT (under 60 chars). No URLs, no long notes in tool calls.
+- For add_to_bom: use ONLY {name, qty, category, reason}. qty is an integer. NO quantity/unit/notes/shopUrl fields.
+- Do NOT pretty-print or indent JSON — output it all on one line.
+- After receiving the tool result, call the next tool or give your final response.
+- NEVER explain that you are calling a tool. NEVER wrap output in markdown.
 
 ${formatToolsBlock()}`
 
@@ -1129,7 +1165,17 @@ ${formatToolsBlock()}`
           // Fall back: escape control chars only inside string literals (state machine)
           toolCall = JSON.parse(escapeJsonStringLiterals(jsonStr))
         }
-      } catch { emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 200)}` }); break }
+      } catch {
+        // Try to repair truncated JSON before giving up
+        const repaired = repairTruncatedJson(jsonStr)
+        if (repaired) {
+          try { toolCall = JSON.parse(repaired) } catch {}
+        }
+        if (!toolCall) {
+          emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 200)}` })
+          break
+        }
+      }
 
       emit({ type: 'tool_call', tool: toolCall.name, input: toolCall.input })
 
