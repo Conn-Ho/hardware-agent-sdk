@@ -1117,7 +1117,7 @@ ${TC_OPEN}{"name":"tool_name","input":{...}}${TC_CLOSE}
 
 CRITICAL JSON rules (output is length-limited — violations cause parse errors):
 - Use ONLY the fields defined in each tool's schema. NO extra fields.
-- Keep all string values SHORT (under 60 chars). No URLs, no long notes in tool calls.
+- Keep all string values SHORT (under 60 chars) EXCEPT: generate_cad_model.description and generate_assembly_guide fields may be as long as needed.
 - For add_to_bom: use ONLY {name, qty, category, reason}. qty is an integer. NO quantity/unit/notes/shopUrl fields.
 - Do NOT pretty-print or indent JSON — output it all on one line.
 - After receiving the tool result, call the next tool or give your final response.
