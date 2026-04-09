@@ -30,7 +30,7 @@ interface PricingTier {
 
 const freePlan: PricingTier = {
   name: 'Free',
-  description: 'Get started with Adam',
+  description: 'Get started for free',
   price: '0',
   features: ['50 tokens per day', 'All AI features', 'Community support'],
   buttonText: 'Current Plan',

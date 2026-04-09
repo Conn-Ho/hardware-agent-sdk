@@ -252,7 +252,7 @@ export default function SettingsView() {
               <div className="col-span-2 flex w-full flex-col gap-2 text-adam-neutral-50">
                 <div className="text-sm font-medium">Responses</div>
                 <div className="text-xs text-adam-neutral-200">
-                  Get notified when Adam finishes a long-running request, like a
+                  Get notified when a long-running request finishes, like a
                   highest quality mesh generation.
                 </div>
               </div>
@@ -277,10 +277,10 @@ export default function SettingsView() {
                   <div className="flex items-center gap-2 text-adam-neutral-50">
                     <p className="text-sm font-medium">
                       {subscription === 'free'
-                        ? 'Adam Free'
+                        ? 'Free Plan'
                         : subscription === 'standard'
-                          ? 'Adam Standard'
-                          : 'Adam Pro'}
+                          ? 'Standard Plan'
+                          : 'Pro Plan'}
                     </p>
                     <Tooltip>
                       <TooltipTrigger>
@@ -426,8 +426,7 @@ export default function SettingsView() {
                 <div className="col-span-2 flex w-full flex-col gap-2 text-adam-neutral-50">
                   <div className="text-sm font-medium">Delete Account</div>
                   <div className="text-xs text-adam-neutral-200">
-                    Permanently delete your account and all associated data from
-                    Adam
+                    Permanently delete your account and all associated data
                   </div>
                 </div>
                 <DeleteAccountDialog>

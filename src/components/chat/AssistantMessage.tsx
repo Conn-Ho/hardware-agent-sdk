@@ -483,7 +483,7 @@ function ObjectButton({
   currentVersion: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  let title = 'Adam Object';
+  let title = 'Generated Object';
   if (message.content.artifact) {
     title = message.content.artifact.title;
   }
@@ -537,7 +537,7 @@ function FreeUserMessage() {
       <Link to="/subscription" className="text-adam-blue hover:underline">
         Upgrade
       </Link>{' '}
-      to a paid plan to experience all the features Adam has to offer.
+      to a paid plan to unlock all features.
     </span>
   );
 }

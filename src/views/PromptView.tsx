@@ -233,7 +233,7 @@ export function PromptView() {
                       return;
                     }
                   }}
-                  placeholder="Start building with Adam..."
+                  placeholder="Start building..."
                   type={type}
                   disabled={limitReached}
                   model={model}
