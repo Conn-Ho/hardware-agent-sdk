@@ -978,30 +978,37 @@ function escapeJsonStringLiterals(s) {
 function repairTruncatedJson(s) {
   if (!s) return null
   try { JSON.parse(s); return s } catch {}
-  let r = s.trimEnd()
-  // Remove trailing comma before closing
-  r = r.replace(/,\s*$/, '')
-  // Close unclosed string (odd number of unescaped quotes means open string)
+
+  // Step 1: escape literal control chars inside strings (handles raw newlines from claude -p)
+  let r = escapeJsonStringLiterals(s.trimEnd())
+  try { JSON.parse(r); return r } catch {}
+
+  // Step 2: remove trailing partial escape or comma
+  r = r.replace(/\\$/, '').replace(/,\s*$/, '')
+
+  // Step 3: close unclosed string
   let inStr = false, escaped = false
   for (const c of r) {
-    if (escaped) { escaped = false; continue }
-    if (c === '\\') { escaped = true; continue }
-    if (c === '"') inStr = !inStr
+    if (escaped)        { escaped = false; continue }
+    if (c === '\\')     { escaped = true;  continue }
+    if (c === '"')        inStr = !inStr
   }
   if (inStr) r += '"'
-  // Walk and close open brackets/braces
+
+  // Step 4: close open brackets/braces
   const stack = []
   inStr = false; escaped = false
   for (const c of r) {
-    if (escaped) { escaped = false; continue }
-    if (c === '\\') { escaped = true; continue }
-    if (c === '"') { inStr = !inStr; continue }
+    if (escaped)     { escaped = false; continue }
+    if (c === '\\')  { escaped = true;  continue }
+    if (c === '"')   { inStr = !inStr;  continue }
     if (!inStr) {
-      if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']')
+      if      (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']')
       else if ((c === '}' || c === ']') && stack.length) stack.pop()
     }
   }
   while (stack.length) r += stack.pop()
+
   try { JSON.parse(r); return r } catch { return null }
 }
 
