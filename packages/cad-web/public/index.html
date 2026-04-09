@@ -1375,9 +1375,10 @@ function loadSTL(sid, onLoad) {
   if (currentMesh) { scene.remove(currentMesh); currentMesh.geometry.dispose(); currentMesh = null }
   stlLoader.load(`/api/model/${sid}/stl`, geo => {
     geo.computeBoundingBox()
+    // Center geometry at origin on all 3 axes
     const center = new THREE.Vector3()
     geo.boundingBox.getCenter(center)
-    geo.translate(-center.x, -geo.boundingBox.min.y, -center.z)
+    geo.translate(-center.x, -center.y, -center.z)
     geo.computeBoundingBox()
     const size = new THREE.Vector3()
     geo.boundingBox.getSize(size)
@@ -1386,9 +1387,15 @@ function loadSTL(sid, onLoad) {
     currentMesh = new THREE.Mesh(geo, mat)
     currentMesh.castShadow = true; currentMesh.receiveShadow = true
     scene.add(currentMesh)
-    const dist = maxDim * 2.2
-    camera.position.set(dist, dist * 0.8, dist)
-    controls.target.set(0, size.y * 0.5, 0)
+    // Fit camera: position relative to model center so it's always centered in viewport
+    const fov = camera.fov * (Math.PI / 180)
+    const aspect = camera.aspect || 1
+    const fitDist = (maxDim / 2) / Math.tan(fov / 2) * 1.5
+    controls.target.set(0, 0, 0)
+    camera.position.set(fitDist * 0.7, fitDist * 0.5, fitDist * 0.7)
+    camera.near = fitDist * 0.001
+    camera.far  = fitDist * 100
+    camera.updateProjectionMatrix()
     controls.update()
     renderer.render(scene, camera)
     if (onLoad) onLoad()
@@ -1401,11 +1408,11 @@ function captureThreeViews() {
   const box  = new THREE.Box3().setFromObject(currentMesh)
   const sz   = box.getSize(new THREE.Vector3())
   const dist = Math.max(sz.x, sz.y, sz.z) * 2.5
-  const cy   = sz.y * 0.5
+  // Model is centered at origin — all views look at (0,0,0)
   const views = {
     isometric: [dist * 0.9, dist * 0.75, dist * 0.9],
-    front:     [0,          cy,           dist * 1.6],
-    side:      [dist * 1.6, cy,           0         ],
+    front:     [0,          0,            dist * 1.6],
+    side:      [dist * 1.6, 0,            0         ],
     top:       [0,          dist * 1.5,   0.001     ],
   }
   const origPos    = camera.position.clone()
@@ -1420,7 +1427,7 @@ function captureThreeViews() {
   const captures = {}
   for (const [name, [px, py, pz]] of Object.entries(views)) {
     camera.position.set(px, py, pz)
-    camera.lookAt(0, cy, 0)
+    camera.lookAt(0, 0, 0)
     renderer.render(scene, camera)
     captures[name] = renderer.domElement.toDataURL('image/png')
   }
