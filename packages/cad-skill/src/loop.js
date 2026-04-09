@@ -55,7 +55,7 @@ export class CadLoop {
   // ── Code generation ──────────────────────────────────────────────────────
 
   async generateCode(prompt, existingCode = null, imageBase64 = null, imageMimeType = null) {
-    this.onProgress(existingCode ? 'Refining code...' : 'Generating Build123d code...')
+    this.onProgress(existingCode ? 'Refining OpenSCAD code...' : 'Generating OpenSCAD code...')
 
     const fullPrompt = existingCode
       ? `Modify this OpenSCAD code:\n${existingCode}\n\nChange required: ${prompt}\n\nOutput only the modified OpenSCAD code, no explanation.`

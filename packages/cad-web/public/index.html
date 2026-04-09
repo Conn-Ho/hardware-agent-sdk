@@ -122,6 +122,7 @@
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
       border-left: 1px solid var(--border-dim);
       background: var(--panel-bg);
     }
@@ -175,6 +176,59 @@
       border: 1px solid #ff453a44;
       border-radius: 10px;
     }
+
+    /* ── Markdown body ── */
+    .md-body { width: 100%; }
+    .md-body p { margin: 0 0 8px; }
+    .md-body p:last-child { margin-bottom: 0; }
+    .md-body h1,.md-body h2,.md-body h3,.md-body h4 { margin: 10px 0 6px; font-weight: 600; }
+    .md-body h1 { font-size: 16px; } .md-body h2 { font-size: 15px; } .md-body h3 { font-size: 14px; }
+    .md-body ul,.md-body ol { margin: 4px 0 8px 18px; }
+    .md-body li { margin-bottom: 3px; }
+    .md-body code { background: #111; color: #e5c07b; padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', monospace; }
+    .md-body pre { background: #111; border-radius: 8px; padding: 10px 12px; overflow-x: auto; margin: 6px 0 10px; }
+    .md-body pre code { background: none; padding: 0; color: #abb2bf; font-size: 12px; }
+    .md-body table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px; }
+    .md-body th,.md-body td { border: 1px solid var(--border); padding: 5px 10px; text-align: left; }
+    .md-body th { background: var(--surface2); font-weight: 600; }
+    .md-body hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+    .md-body strong { font-weight: 600; }
+    .md-body blockquote { border-left: 3px solid var(--accent); padding-left: 10px; color: var(--text-dim); margin: 6px 0; }
+
+    /* ── Assembly Guide ── */
+    .asm-safety { background: #ff9f0a18; border: 1px solid #ff9f0a44; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+    .asm-safety-item { font-size: 11px; color: #ff9f0a; margin-bottom: 3px; }
+    .asm-safety-item:last-child { margin-bottom: 0; }
+    .asm-overview { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+    .asm-progress-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 4px; }
+    .asm-progress-bar  { height: 100%; background: var(--success); border-radius: 2px; transition: width .3s; }
+    .asm-progress-label { font-size: 10px; color: var(--text-muted); margin-bottom: 12px; }
+    .asm-step { border: 1px solid var(--border-dim); border-radius: 8px; margin-bottom: 6px; overflow: hidden; transition: border-color .2s; }
+    .asm-step:hover { border-color: var(--border); }
+    .asm-step.asm-step-done { opacity: .6; }
+    .asm-step-header { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; background: var(--surface); user-select: none; }
+    .asm-step-header:hover { background: var(--surface2); }
+    .asm-check-wrap { display: flex; align-items: center; cursor: pointer; }
+    .asm-check { display: none; }
+    .asm-check-box { width: 15px; height: 15px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+    .asm-check:checked + .asm-check-box { background: var(--success); border-color: var(--success); }
+    .asm-check:checked + .asm-check-box::after { content: '✓'; font-size: 10px; color: #fff; }
+    .asm-step-num  { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 16px; }
+    .asm-step-title { font-size: 12px; font-weight: 600; flex: 1; }
+    .asm-step-comp { font-size: 10px; color: var(--accent); background: var(--accent-dim); padding: 1px 6px; border-radius: 10px; white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+    .asm-chevron { font-size: 9px; color: var(--text-muted); }
+    .asm-step-body { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+    .asm-table { display: block; padding: 0 10px 10px; width: 100%; border-collapse: collapse; }
+    .asm-table thead th { font-size: 10px; font-weight: 600; color: var(--text-muted); padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--border-dim); }
+    .asm-table tbody td { font-size: 11px; padding: 5px 8px; border-bottom: 1px solid var(--border-dim); vertical-align: middle; }
+    .asm-table tbody td:first-child { display: flex; align-items: center; white-space: nowrap; }
+    .asm-table tbody tr:last-child td { border-bottom: none; }
+    .asm-conn-note { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .asm-step-note { font-size: 11px; color: var(--text-dim); padding: 6px 10px 10px; }
+    .asm-test-section { margin-top: 12px; border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; }
+    .asm-test-title { font-size: 11px; font-weight: 600; padding: 7px 10px; background: var(--surface); border-bottom: 1px solid var(--border-dim); }
+    .asm-test-item { display: flex; align-items: flex-start; gap: 7px; font-size: 11px; padding: 6px 10px; border-bottom: 1px solid var(--border-dim); }
+    .asm-test-item:last-child { border-bottom: none; }
 
     /* ── Assessment card ── */
     .assessment-card {
@@ -1038,23 +1092,16 @@
   <!-- Assembly -->
   <div class="tool-panel" id="panel-assembly">
     <div class="params-header">
-      <span class="params-title">Assembly</span>
+      <span class="params-title">接线指南</span>
+      <button class="icon-btn" id="assembly-reset-btn" title="清除指南" onclick="clearAssemblyGuide()" style="display:none">✕</button>
     </div>
-    <div class="panel-placeholder">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+    <div id="assembly-placeholder" class="panel-placeholder">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".4">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
-      <span class="coming-badge">COMING SOON</span>
-      <h3>Assembly Viewer</h3>
-      <p>Step-by-step visual assembly guide with 3D exploded views.</p>
-      <ul class="feature-list">
-        <li>Multi-STL exploded view</li>
-        <li>Animated assembly steps</li>
-        <li>Component highlight mode</li>
-        <li>Camera verification per step</li>
-        <li>Printable assembly guide</li>
-      </ul>
+      <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:10px">告诉 Claude 你准备好了装配，<br>它会生成逐步接线指南。</p>
     </div>
+    <div id="assembly-guide" style="display:none;overflow-y:auto;flex:1;padding:10px 12px 16px"></div>
   </div>
 
 </aside>
@@ -1108,7 +1155,6 @@
         <button class="attach-btn" onclick="triggerImageUpload()" title="附加图片">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
-        <input type="file" id="image-input" accept="image/*" multiple style="display:none" onchange="handleImageFiles(this.files)">
         <div class="spacer"></div>
         <select class="model-select" id="provider-select" onchange="onProviderSelectChange()">
           <option value="claude-cli">Claude CLI</option>
@@ -1187,13 +1233,14 @@
 </div>
 
 <script type="importmap">
-{"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/"}}
+{"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/","marked":"https://cdn.jsdelivr.net/npm/marked@12/src/marked.js"}}
 </script>
 
 <script type="module">
 import * as THREE        from 'three'
 import { STLLoader }     from 'three/addons/loaders/STLLoader.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { marked }        from 'marked'
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let sessionId     = localStorage.getItem('cad-session') || null
@@ -1219,7 +1266,7 @@ function resize() {
   renderer.setSize(w, h)
 }
 
-function loadSTL(sid) {
+function loadSTL(sid, onLoad) {
   if (!stlLoader) return
   document.getElementById('viewer-empty').style.display = 'none'
   if (currentMesh) { scene.remove(currentMesh); currentMesh.geometry.dispose(); currentMesh = null }
@@ -1240,7 +1287,49 @@ function loadSTL(sid) {
     camera.position.set(dist, dist * 0.8, dist)
     controls.target.set(0, size.y * 0.5, 0)
     controls.update()
+    renderer.render(scene, camera)
+    if (onLoad) onLoad()
   })
+}
+
+// ── Three.js angle captures (replaces Python/matplotlib renders) ──────────────
+function captureThreeViews() {
+  if (!renderer || !scene || !currentMesh) return {}
+  const box  = new THREE.Box3().setFromObject(currentMesh)
+  const sz   = box.getSize(new THREE.Vector3())
+  const dist = Math.max(sz.x, sz.y, sz.z) * 2.5
+  const cy   = sz.y * 0.5
+  const views = {
+    isometric: [dist * 0.9, dist * 0.75, dist * 0.9],
+    front:     [0,          cy,           dist * 1.6],
+    side:      [dist * 1.6, cy,           0         ],
+    top:       [0,          dist * 1.5,   0.001     ],
+  }
+  const origPos    = camera.position.clone()
+  const origTarget = controls.target.clone()
+  const origAspect = camera.aspect
+  // Square crop for thumbnails
+  camera.aspect = 1
+  camera.updateProjectionMatrix()
+  const el = renderer.domElement
+  const ow = el.width, oh = el.height
+  renderer.setSize(320, 320)
+  const captures = {}
+  for (const [name, [px, py, pz]] of Object.entries(views)) {
+    camera.position.set(px, py, pz)
+    camera.lookAt(0, cy, 0)
+    renderer.render(scene, camera)
+    captures[name] = renderer.domElement.toDataURL('image/png')
+  }
+  // Restore
+  renderer.setSize(ow, oh)
+  camera.aspect = origAspect
+  camera.updateProjectionMatrix()
+  camera.position.copy(origPos)
+  controls.target.copy(origTarget)
+  controls.update()
+  renderer.render(scene, camera)
+  return captures
 }
 
 window.setViewMode = (m) => {
@@ -1269,7 +1358,7 @@ try {
   scene.background = new THREE.Color(0x111113)
   camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50000)
   camera.position.set(100, 80, 100)
-  renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -1365,13 +1454,23 @@ inputBox.addEventListener('drop', (e) => {
 // ── Chat helpers ───────────────────────────────────────────────────────────────
 const messagesEl = document.getElementById('messages')
 
+function renderMd(text) {
+  const html = marked.parse(text, { breaks: true, gfm: true })
+  const div = document.createElement('div')
+  div.className = 'md-body'
+  div.innerHTML = html
+  return div
+}
+
 function addMsg(type, content) {
   const wrap = document.createElement('div')
   wrap.className = `msg-wrap ${type}`
   const bubble = document.createElement('div')
   bubble.className = 'msg-bubble'
-  if (typeof content === 'string') bubble.textContent = content
-  else bubble.appendChild(content)
+  if (typeof content === 'string') {
+    if (type === 'assistant') bubble.appendChild(renderMd(content))
+    else bubble.textContent = content
+  } else bubble.appendChild(content)
   wrap.appendChild(bubble)
   messagesEl.appendChild(wrap)
   messagesEl.scrollTop = messagesEl.scrollHeight
@@ -1661,10 +1760,7 @@ async function applyParams() {
         if (evt.type === 'error') { appendLog(`Error: ${evt.text}`, 'err'); finishLog('Failed'); return }
         if (evt.type === 'done') {
           finishLog('Updated')
-          loadSTL(sessionId + '?t=' + Date.now())
-          // force reload by clearing and reloading
-          setTimeout(() => loadSTL(sessionId), 100)
-          showRenders(sessionId, evt.renderViews || [])
+          loadSTL(sessionId, () => showRenders(sessionId, captureThreeViews()))
         }
       }
     }
@@ -1679,13 +1775,18 @@ window.resetParams = () => {
 }
 
 // ── Renders ────────────────────────────────────────────────────────────────────
+// views: object { name: dataURL } from Three.js, or array of view names (legacy server-side)
 function showRenders(sid, views) {
   const strip = document.getElementById('renders-strip')
   strip.innerHTML = ''
-  for (const view of views) {
+  const entries = Array.isArray(views)
+    ? views.map(v => [v, `/api/model/${sid}/render/${v}?t=${Date.now()}`])
+    : Object.entries(views || {})
+  for (const [name, src] of entries) {
+    if (!src) continue
     const wrap = document.createElement('div'); wrap.className = 'render-thumb'
-    const img  = document.createElement('img'); img.src = `/api/model/${sid}/render/${view}?t=${Date.now()}`; img.alt = view
-    const lbl  = document.createElement('span'); lbl.className = 'render-label'; lbl.textContent = view
+    const img  = document.createElement('img'); img.src = src; img.alt = name
+    const lbl  = document.createElement('span'); lbl.className = 'render-label'; lbl.textContent = name
     wrap.append(img, lbl); strip.appendChild(wrap)
   }
 }
@@ -1838,6 +1939,10 @@ window.send = async function() {
         } else if (evt.type === 'stage_update') {
           updateStageBar(evt.stage)
 
+        } else if (evt.type === 'assembly_guide') {
+          renderAssemblyGuide(evt.guide)
+          switchTool('assembly')
+
         } else if (evt.type === 'cad_update') {
           // CAD model ready — update viewer
           sessionId = evt.sessionId
@@ -1845,8 +1950,7 @@ window.send = async function() {
           versionCounter++
           finishLog(`3D 模型完成 — ${evt.rounds} 轮`)
           addObjectCard(versionCounter, sessionId, latestCode, evt.metrics, evt.printability, 'agent')
-          loadSTL(sessionId)
-          showRenders(sessionId, evt.renderViews || [])
+          loadSTL(sessionId, () => showRenders(sessionId, captureThreeViews()))
           document.getElementById('chat-title').textContent = desc.slice(0, 40)
           document.getElementById('stl-btn').disabled = false
           const params = parseParams(latestCode)
@@ -1864,7 +1968,7 @@ window.send = async function() {
             finishLog(`完成 — ${evt.rounds} 轮`)
             const cfg = await fetch('/api/ai-config').then(r=>r.json()).catch(()=>({}))
             addObjectCard(versionCounter, sessionId, latestCode, evt.metrics, evt.printability, cfg.provider || 'claude-cli')
-            loadSTL(sessionId); showRenders(sessionId, evt.renderViews || [])
+            loadSTL(sessionId, () => showRenders(sessionId, captureThreeViews()))
             document.getElementById('chat-title').textContent = desc.slice(0, 40)
             document.getElementById('stl-btn').disabled = false
             const params = parseParams(latestCode)
@@ -1925,17 +2029,19 @@ checkExec(); setInterval(checkExec, 10_000)
 async function loadSessions() {
   const list = document.getElementById('sessions-list')
   try {
-    const assets = await fetch('/api/assets').then(r => r.json())
+    const sessions = await fetch('/api/sessions').then(r => r.json())
     list.innerHTML = ''
-    if (!assets.length) {
+    if (!sessions.length) {
       list.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:8px 4px">No creations yet</div>'
       return
     }
-    for (const a of assets) {
+    for (const s of sessions) {
       const item = document.createElement('div')
-      item.className = 'session-item' + (a.id === sessionId ? ' active' : '')
-      item.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="session-name">${a.description.slice(0, 32)}</span>`
-      item.onclick = () => loadSession(a)
+      item.className = 'session-item' + (s.id === sessionId ? ' active' : '')
+      const stageLabel = { requirements:'需求', components:'选型', cad:'CAD', firmware:'固件', assembly:'装配', complete:'完成' }[s.stage] || s.stage
+      const dot = s.hasStl ? '🟢' : '🔵'
+      item.innerHTML = `<span style="font-size:10px;margin-right:4px">${dot}</span><span class="session-name">${s.summary.slice(0, 28)}</span><span style="font-size:9px;color:var(--text-muted);margin-left:auto">${stageLabel}</span>`
+      item.onclick = (e) => loadSession({ id: s.id, description: s.summary, hasStl: s.hasStl, renders: s.renders }, e.currentTarget)
       list.appendChild(item)
     }
   } catch(e) {
@@ -1943,29 +2049,53 @@ async function loadSessions() {
   }
 }
 
-async function loadSession(asset) {
+async function loadSession(asset, clickedEl) {
   sessionId = asset.id
   localStorage.setItem('cad-session', sessionId)
-  document.getElementById('chat-title').textContent = asset.description.slice(0, 40)
   document.getElementById('stl-btn').disabled = false
-  setMode('refine')
-  loadSTL(sessionId)
-  showRenders(sessionId, asset.renders || [])
-  // Load code and params
+
+  // Restore STL + renders + code
+  if (asset.hasStl) loadSTL(sessionId, () => showRenders(sessionId, captureThreeViews()))
   try {
-    const meta = await fetch(`/api/model/${sessionId}/meta`).then(r => r.json())
-    if (meta.code) {
+    const meta = await fetch(`/api/model/${sessionId}/meta`).then(r => r.ok ? r.json() : null)
+    if (meta?.code) {
       latestCode = meta.code
       const params = parseParams(meta.code)
       for (const [k, v] of Object.entries(params)) currentParams[k] = { ...v, original: v.value }
       renderParams(currentParams)
     }
   } catch {}
-  // Load this session's BOM
+
+  // Restore project state (stage, BOM, requirements)
+  let state = null
+  try { state = await fetch(`/api/project/${sessionId}/state`).then(r => r.ok ? r.json() : null) } catch {}
+
+  // Restore UI state
+  const desc = asset.description || state?.summary || 'Project'
+  document.getElementById('chat-title').textContent = desc.slice(0, 40)
+  if (state?.stage) updateStageBar(state.stage)
+  if (state?.assembly?.guide) renderAssemblyGuide(state.assembly.guide)
   loadBOM()
+
+  // Clear chat and show restoration summary
+  messagesEl.innerHTML = ''
+  agentHistory = []
+
+  // Show a context card in chat so the agent knows where we left off
+  const stageName = STAGE_NAMES[state?.stage] || state?.stage || '未知'
+  const bomList = (state?.bom || []).map(b => `• ${b.name} ×${(b.qty || b.quantity || 1)}`).join('\n') || '暂无'
+  const reqList = (state?.requirements || []).map(r => `• ${r}`).join('\n') || '暂无'
+  const restoreText = `📂 已恢复项目: ${desc}\n\n当前阶段: ${stageName}\n\n需求:\n${reqList}\n\nBOM:\n${bomList}${state?.cad?.generated ? '\n\n3D模型: ✅ 已生成' : ''}\n\n继续告诉我下一步要做什么。`
+  addMsg('assistant', restoreText)
+
+  // Prime agentHistory so next message has context
+  agentHistory = [{ role: 'assistant', content: restoreText }]
+
   // Update sidebar highlight
   document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'))
-  event.currentTarget.classList.add('active')
+  if (clickedEl) clickedEl.classList.add('active')
+  // Focus the prompt input for the user to continue the conversation
+  document.getElementById('prompt-input').focus()
 }
 
 window.newSession = () => {
@@ -1987,6 +2117,7 @@ window.newSession = () => {
   // New session = empty BOM (don't load from default, which may have stale items)
   bomItems = []
   renderBOM()
+  clearAssemblyGuide()
 }
 
 loadSessions()
@@ -2300,6 +2431,134 @@ window.generateBOM = async function() {
 
 loadBOM()
 
+// ── Assembly Guide ──────────────────────────────────────────────────────────
+const WIRE_COLORS = {
+  '红': '#ff453a', '红色': '#ff453a',
+  '黑': '#636366', '黑色': '#636366',
+  '黄': '#ffd60a', '黄色': '#ffd60a',
+  '橙': '#ff9f0a', '橙色': '#ff9f0a',
+  '绿': '#30d158', '绿色': '#30d158',
+  '蓝': '#0a84ff', '蓝色': '#0a84ff',
+  '白': '#f5f5f7', '白色': '#f5f5f7',
+  '紫': '#bf5af2', '紫色': '#bf5af2',
+  '灰': '#98989d', '灰色': '#98989d',
+}
+
+function wireColorDot(color) {
+  const c = Object.entries(WIRE_COLORS).find(([k]) => color?.includes(k))
+  const hex = c ? c[1] : '#636366'
+  return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${hex};margin-right:5px;flex-shrink:0;border:1px solid #ffffff22"></span>`
+}
+
+function renderAssemblyGuide(guide) {
+  const placeholder = document.getElementById('assembly-placeholder')
+  const container   = document.getElementById('assembly-guide')
+  const resetBtn    = document.getElementById('assembly-reset-btn')
+  if (!placeholder || !container) return
+
+  placeholder.style.display = 'none'
+  container.style.display   = 'block'
+  if (resetBtn) resetBtn.style.display = ''
+
+  let html = ''
+
+  // Safety notes
+  if (guide.safety_notes?.length) {
+    html += `<div class="asm-safety">`
+    guide.safety_notes.forEach(n => { html += `<div class="asm-safety-item">⚠️ ${n}</div>` })
+    html += `</div>`
+  }
+
+  // Overview
+  if (guide.overview) {
+    html += `<div class="asm-overview">${guide.overview}</div>`
+  }
+
+  // Progress bar
+  const total = guide.steps?.length || 0
+  html += `<div class="asm-progress-wrap"><div class="asm-progress-bar" id="asm-progress-bar" style="width:0%"></div></div>`
+  html += `<div class="asm-progress-label" id="asm-progress-label">0 / ${total} 步骤</div>`
+
+  // Steps
+  ;(guide.steps || []).forEach((step, si) => {
+    html += `<div class="asm-step" id="asm-step-${si}" data-si="${si}">`
+    html += `<div class="asm-step-header" onclick="toggleAsmStep(${si})">`
+    html += `<label class="asm-check-wrap" onclick="event.stopPropagation()">`
+    html += `<input type="checkbox" class="asm-check" data-si="${si}" onchange="onAsmCheck(this,${si},${total})">`
+    html += `<span class="asm-check-box"></span></label>`
+    html += `<span class="asm-step-num">${si + 1}</span>`
+    html += `<span class="asm-step-title">${step.title}</span>`
+    html += `<span class="asm-step-comp">${step.component}</span>`
+    html += `<span class="asm-chevron" id="asm-chev-${si}">▼</span>`
+    html += `</div>`
+
+    html += `<div class="asm-step-body" id="asm-body-${si}">`
+    if (step.connections?.length) {
+      html += `<table class="asm-table"><thead><tr><th>线色</th><th>从</th><th>→ 到</th></tr></thead><tbody>`
+      step.connections.forEach(conn => {
+        const note = conn.note ? `<div class="asm-conn-note">${conn.note}</div>` : ''
+        html += `<tr><td>${wireColorDot(conn.color)}${conn.color}</td><td>${conn.from}</td><td>${conn.to}${note}</td></tr>`
+      })
+      html += `</tbody></table>`
+    }
+    if (step.note) {
+      html += `<div class="asm-step-note">💡 ${step.note}</div>`
+    }
+    html += `</div></div>`
+  })
+
+  // Test steps
+  if (guide.test_steps?.length) {
+    html += `<div class="asm-test-section"><div class="asm-test-title">🔋 上电验证</div>`
+    guide.test_steps.forEach((t, i) => {
+      html += `<div class="asm-test-item"><label class="asm-check-wrap"><input type="checkbox" class="asm-test-check"><span class="asm-check-box"></span></label>${i+1}. ${t}</div>`
+    })
+    html += `</div>`
+  }
+
+  container.innerHTML = html
+  // Open first step by default
+  const firstBody = document.getElementById('asm-body-0')
+  if (firstBody) firstBody.style.maxHeight = firstBody.scrollHeight + 'px'
+}
+
+window.toggleAsmStep = function(si) {
+  const body = document.getElementById(`asm-body-${si}`)
+  const chev = document.getElementById(`asm-chev-${si}`)
+  if (!body) return
+  const open = body.style.maxHeight && body.style.maxHeight !== '0px'
+  body.style.maxHeight = open ? '0px' : body.scrollHeight + 'px'
+  if (chev) chev.textContent = open ? '▼' : '▲'
+}
+
+window.onAsmCheck = function(el, si, total) {
+  const step = document.getElementById(`asm-step-${si}`)
+  if (step) step.classList.toggle('asm-step-done', el.checked)
+  // Update progress
+  const checked = document.querySelectorAll('.asm-check:checked').length
+  const bar   = document.getElementById('asm-progress-bar')
+  const label = document.getElementById('asm-progress-label')
+  if (bar)   bar.style.width = `${Math.round(checked / total * 100)}%`
+  if (label) label.textContent = `${checked} / ${total} 步骤`
+  // Auto-open next step
+  if (el.checked) {
+    const nextBody = document.getElementById(`asm-body-${si + 1}`)
+    const nextChev = document.getElementById(`asm-chev-${si + 1}`)
+    if (nextBody) { nextBody.style.maxHeight = nextBody.scrollHeight + 'px'; if (nextChev) nextChev.textContent = '▲' }
+  }
+}
+
+window.clearAssemblyGuide = function() {
+  const placeholder = document.getElementById('assembly-placeholder')
+  const container   = document.getElementById('assembly-guide')
+  const resetBtn    = document.getElementById('assembly-reset-btn')
+  if (placeholder) placeholder.style.display = ''
+  if (container)   { container.style.display = 'none'; container.innerHTML = '' }
+  if (resetBtn)    resetBtn.style.display = 'none'
+}
+
 </script>
+<!-- File input must live outside any overflow:hidden container so programmatic .click() works in all browsers -->
+<input type="file" id="image-input" accept="image/*" multiple style="display:none;position:fixed;top:-9999px" onchange="handleImageFiles(this.files)">
 </body>
 </html>

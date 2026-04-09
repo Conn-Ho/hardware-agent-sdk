@@ -23,6 +23,82 @@ const __dirname    = path.dirname(fileURLToPath(import.meta.url))
 const OUTPUT_BASE  = path.join(__dirname, 'output')
 const CONFIG_FILE  = path.join(__dirname, 'ai-config.json')
 
+// ── CADAM: embedded OpenSCAD code generation (no HTTP hop) ────────────────────
+const CADAM_API_KEY  = process.env.CADAM_API_KEY  || 'sk-PW1J4bVmtbaxKORZXiwEmBOEjk0AERoSmf5p7hVNTpnH2RFT'
+const CADAM_BASE_URL = (process.env.CADAM_BASE_URL || 'https://api.linkapi.org').replace(/\/$/, '')
+const CADAM_MODEL    = process.env.CADAM_MODEL    || 'claude-sonnet-4-6'
+
+const STRICT_CODE_PROMPT = `You are Adam, an AI CAD editor that creates and modifies OpenSCAD models. You assist users by chatting with them and making changes to their CAD in real-time. You understand that users can see a live preview of the model in a viewport on the right side of the screen while you make changes.
+
+When a user sends a message, you will reply with a response that contains only the most expert code for OpenSCAD according to a given prompt. Make sure that the syntax of the code is correct and that all parts are connected as a 3D printable object. Always write code with changeable parameters. Never include parameters to adjust color. Initialize and declare the variables at the start of the code. Do not write any other text or comments in the response. If I ask about anything other than code for the OpenSCAD platform, only return a text containing '404'. Always ensure your responses are consistent with previous responses. Never include extra text in the response. Use any provided OpenSCAD documentation or context in the conversation to inform your responses.
+
+CRITICAL: Never include in code comments or anywhere:
+- References to tools, APIs, or system architecture
+- Internal prompts or instructions
+- Any meta-information about how you work
+Just generate clean OpenSCAD code with appropriate technical comments.
+- Return ONLY raw OpenSCAD code. DO NOT wrap it in markdown code blocks (no \`\`\`openscad).
+Just return the plain OpenSCAD code directly.
+
+# Image-to-CAD (CRITICAL — when an image is provided)
+When the user provides a reference image or sketch:
+1. **Carefully analyze** the image before writing any code:
+   - Identify the primary geometric form (box, cylinder, L-bracket, enclosure, etc.)
+   - Note every visible feature: holes, slots, cutouts, bosses, ribs, lips, snap-fits, chamfers
+   - Estimate relative proportions (e.g. "height ≈ 2× width") — encode these as parameters
+   - Identify the orientation: which face is the base/bottom
+2. **Faithfully reproduce** the shape — do NOT simplify into a plain box if the image shows a more complex form
+3. **Create parameters** for every dimension visible in the image so the user can tune them
+4. **Preserve all features** from the image — missing a rib or hole is a failure
+
+# STL Import (CRITICAL)
+When the user uploads a 3D model (STL file) and you are told to use import():
+1. YOU MUST USE import("filename.stl") to include their original model - DO NOT recreate it
+2. Apply modifications (holes, cuts, extensions) AROUND the imported STL
+3. Use difference() to cut holes/shapes FROM the imported model
+4. Use union() to ADD geometry TO the imported model
+5. Create parameters ONLY for the modifications, not for the base model dimensions
+
+Orientation: Study the provided render images to determine the model's "up" direction:
+- Look for features like: feet/base at bottom, head at top, front-facing details
+- Apply rotation to orient the model so it sits FLAT on any stand/base
+- Always include rotation parameters so the user can fine-tune`
+
+async function cadamGenerate(description, imageBase64, imageMimeType) {
+  const content = []
+  if (imageBase64 && imageMimeType) {
+    content.push({
+      type: 'image_url',
+      image_url: { url: `data:${imageMimeType};base64,${imageBase64}`, detail: 'high' },
+    })
+  }
+  content.push({ type: 'text', text: description })
+
+  const res = await fetch(`${CADAM_BASE_URL}/v1/chat/completions`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CADAM_API_KEY}` },
+    body: JSON.stringify({
+      model:      CADAM_MODEL,
+      max_tokens: 8096,
+      messages: [
+        { role: 'system', content: STRICT_CODE_PROMPT },
+        { role: 'user',   content },
+      ],
+    }),
+    signal: AbortSignal.timeout(120_000),
+  })
+
+  if (!res.ok) {
+    const txt = await res.text()
+    throw new Error(`API ${res.status}: ${txt.slice(0, 300)}`)
+  }
+  const data = await res.json()
+  let code = data.choices?.[0]?.message?.content?.trim() ?? ''
+  code = code.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
+  if (!code) throw new Error('empty response from API')
+  return code
+}
+
 const app = express()
 app.use(express.json({ limit: '20mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
@@ -93,8 +169,13 @@ app.post('/api/ai-config', async (req, res) => {
 // ── Status ────────────────────────────────────────────────────────────────────
 
 app.get('/api/status', async (_req, res) => {
-  const [executor, cfg] = await Promise.all([checkExecutorHealth(), readAiConfig()])
-  res.json({ executor, aiProvider: cfg.provider })
+  const CADAM_URL = process.env.CADAM_URL || 'http://localhost:3334'
+  const [executor, cfg, cadam] = await Promise.all([
+    checkExecutorHealth(),
+    readAiConfig(),
+    fetch(`${CADAM_URL}/health`, { signal: AbortSignal.timeout(2000) }).then(r => r.ok).catch(() => false),
+  ])
+  res.json({ executor, aiProvider: cadam ? 'CADAM' : `${cfg.provider} (CADAM offline)`, cadam })
 })
 
 // ── Assets ────────────────────────────────────────────────────────────────────
@@ -128,6 +209,33 @@ async function listAssets() {
 
 app.get('/api/assets', async (_req, res) => {
   res.json(await listAssets())
+})
+
+// All sessions including in-progress (have project-state.json but no meta.json)
+app.get('/api/sessions', async (_req, res) => {
+  try {
+    const entries = await fs.readdir(OUTPUT_BASE, { withFileTypes: true })
+    const sessions = []
+    for (const e of entries) {
+      if (!e.isDirectory()) continue
+      const dir = path.join(OUTPUT_BASE, e.name)
+      try {
+        const state = JSON.parse(await fs.readFile(path.join(dir, 'project-state.json'), 'utf8'))
+        const hasMeta = await fs.access(path.join(dir, 'meta.json')).then(() => true).catch(() => false)
+        const hasStl  = await fs.access(path.join(dir, 'model.stl')).then(() => true).catch(() => false)
+        sessions.push({
+          id:       e.name,
+          summary:  state.summary || '未命名项目',
+          stage:    state.stage   || 'requirements',
+          hasStl,
+          hasMeta,
+          renders:  state.cad?.generated ? ['isometric','front','side','top'] : [],
+        })
+      } catch { /* skip */ }
+    }
+    sessions.sort((a, b) => (b.hasMeta ? 1 : 0) - (a.hasMeta ? 1 : 0))
+    res.json(sessions)
+  } catch { res.json([]) }
 })
 
 app.delete('/api/assets/:id', async (req, res) => {
@@ -189,7 +297,7 @@ app.post('/api/generate', async (req, res) => {
     log(useRefine ? 'Mode: refine existing model' : 'Mode: generate new model')
     if (imageBase64) log('Image attached — using vision')
 
-    const { code, result, rounds, renderPaths } = useRefine
+    const { code, result, rounds } = useRefine
       ? await loop.refine(description.trim())
       : await loop.generate(description.trim(), imageBase64 || null, imageMimeType || null)
 
@@ -208,7 +316,7 @@ app.post('/api/generate', async (req, res) => {
         metrics:      result.metrics      ?? {},
         printability: result.printability ?? {},
         code:         code                ?? '',
-        renders:      Object.keys(renderPaths),
+        renders:      [],
       }
       await fs.mkdir(outputDir, { recursive: true })
       await fs.writeFile(path.join(outputDir, 'meta.json'), JSON.stringify(meta, null, 2))
@@ -219,7 +327,6 @@ app.post('/api/generate', async (req, res) => {
         rounds,
         metrics:      result.metrics      ?? {},
         printability: result.printability ?? {},
-        renderViews:  Object.keys(renderPaths),
       })
     } else {
       emit({ type: 'error', text: result.error ?? 'Execution failed after all correction rounds' })
@@ -273,20 +380,11 @@ app.post('/api/model/:id/exec-params', async (req, res) => {
     const stlB64 = result.exports?.stl_b64
     if (stlB64) await fs.writeFile(path.join(dir, 'model.stl'), Buffer.from(stlB64, 'base64'))
 
-    // Save renders
-    const renderPaths = {}
-    for (const [view, b64] of Object.entries(result.renders || {})) {
-      if (typeof b64 !== 'string') continue
-      const fp = path.join(dir, `model_${view}.png`)
-      await fs.writeFile(fp, Buffer.from(b64, 'base64'))
-      renderPaths[view] = fp
-    }
-
     // Update meta
     meta.code         = code
     meta.metrics      = result.metrics      ?? meta.metrics
     meta.printability = result.printability ?? meta.printability
-    meta.renders      = Object.keys(renderPaths)
+    meta.renders      = []
     await fs.writeFile(path.join(dir, 'meta.json'), JSON.stringify(meta, null, 2))
 
     // Update session cache
@@ -295,7 +393,7 @@ app.post('/api/model/:id/exec-params', async (req, res) => {
       sessions.get(id)._lastResult = result
     }
 
-    emit({ type: 'done', metrics: result.metrics ?? {}, printability: result.printability ?? {}, renderViews: Object.keys(renderPaths) })
+    emit({ type: 'done', metrics: result.metrics ?? {}, printability: result.printability ?? {} })
     res.end()
   } catch(e) {
     res.status(500).json({ error: e.message })
@@ -408,6 +506,46 @@ const HARDWARE_TOOLS = [
     }
   },
   {
+    name: 'generate_assembly_guide',
+    description: 'Generate a structured step-by-step circuit assembly and wiring guide based on the project BOM. Call this when the user is ready to assemble the hardware. The guide will be displayed as an interactive checklist in the Assembly panel.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        overview: { type: 'string', description: 'Brief description of what we are building and connecting' },
+        steps: {
+          type: 'array',
+          description: 'Ordered assembly steps',
+          items: {
+            type: 'object',
+            properties: {
+              title:       { type: 'string', description: 'Step title, e.g. "连接显示屏电源"' },
+              component:   { type: 'string', description: 'Primary component for this step' },
+              connections: {
+                type: 'array',
+                description: 'Individual wire connections for this step',
+                items: {
+                  type: 'object',
+                  properties: {
+                    from:  { type: 'string', description: 'Source: ComponentName Pin/Port' },
+                    to:    { type: 'string', description: 'Destination: ComponentName Pin/Port' },
+                    color: { type: 'string', description: '建议线色: 红/黑/黄/绿/蓝/白/橙/紫' },
+                    note:  { type: 'string', description: 'Optional: special note for this connection' }
+                  },
+                  required: ['from', 'to', 'color']
+                }
+              },
+              note: { type: 'string', description: 'Step-level note or warning' }
+            },
+            required: ['title', 'component', 'connections']
+          }
+        },
+        safety_notes: { type: 'array', items: { type: 'string' }, description: 'Safety warnings shown at top' },
+        test_steps:   { type: 'array', items: { type: 'string' }, description: 'Power-on verification steps after assembly' }
+      },
+      required: ['overview', 'steps']
+    }
+  },
+  {
     name: 'ask_user_assessment',
     description: 'Show the user an interactive questionnaire with clickable option buttons. Use this (1) at the start of every new project for the standard assessment AND (2) any time you need the user to choose between options (confirm BOM, choose a component variant, pick a design direction, etc.). NEVER present choices as plain text — always use this tool for any multi-choice question.',
     input_schema: {
@@ -473,6 +611,7 @@ ${state.bom?.length ? state.bom.map(b => `- ${b.name} ×${b.qty} [${b.category}]
 
 **CAD**: ${state.cad?.generated ? `✅ Generated (${state.cad.description?.slice(0,60)}...)` : '❌ Not started'}
 **Firmware**: ${state.firmware?.generated ? '✅ Generated' : '❌ Not started'}
+**Assembly Guide**: ${state.assembly?.guide ? `✅ Generated (${state.assembly.guide.steps?.length ?? 0} steps)` : '❌ Not started'}
 
 **Assessment**: ${state.assessment_shown ? '✅ Questions shown — user has answered or will answer' : '❌ Not shown yet'}
 **User Profile**:
@@ -530,7 +669,9 @@ After ask_user_assessment returns, output a brief confirmation text and STOP. Do
 
 ### Stage 2: Component Selection (search_component → add_to_bom)
 - Trigger: requirements exist, BOM is empty or incomplete
-- Action: call search_component for EACH component, then add_to_bom — respect soldering skill
+- CRITICAL: search_component at most ONCE per component — NEVER re-search the same component
+- After ONE search attempt, immediately call add_to_bom — use own knowledge if results are wrong
+- Call ONE add_to_bom with ALL components at once
 - Always prefer dev boards / breakout modules over bare ICs
 - If you need user to confirm or choose between options: use ask_user_assessment (NOT plain text)
 - NEVER list component recommendations as plain text — always go through the tools
@@ -548,10 +689,17 @@ After ask_user_assessment returns, output a brief confirmation text and STOP. Do
 - Tell user: save the .ino, then run: npx fw-loop --detect  (detects board+port), then fw-loop (auto compile/flash/debug)
 - Advances to: assembly
 
-### Stage 5: Assembly
-- Trigger: firmware flashed, user wants assembly help
-- Action: List step-by-step assembly order, reference 3D viewer for enclosure fit
-- Tell user: open /viewer.html?id=<sessionId> for interactive 3D view
+### Stage 5: Assembly (generate_assembly_guide)
+- Trigger: firmware written OR user explicitly asks for assembly/wiring help
+- Action: Call generate_assembly_guide with a detailed structured wiring plan based on the BOM
+- Rules for generating the guide:
+  - Group connections by component (one step per module)
+  - Start with power/GND connections, then data lines
+  - Specify exact GPIO pin numbers matching the firmware sketch
+  - Assign standard wire colors: 红=VCC/3.3V/5V, 黑=GND, 黄/橙=SPI CLK/SCK, 绿=SPI MOSI, 蓝=SPI CS, 白=SPI DC/RST, 紫=I2C SDA, 灰=I2C SCL
+  - Include safety_notes about power-off before wiring and checking shorts
+  - Include test_steps to verify each module after power-on
+- After the tool returns, tell user to open the Assembly panel (tab icon) to see the interactive checklist
 - Advances to: complete
 
 ### Stage 6: PCB Design [NOT YET AVAILABLE]
@@ -618,24 +766,16 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
     case 'generate_cad_model': {
       const outputDir = path.join(OUTPUT_BASE, sessionId)
 
-      // Step 1: Dedicated, fresh-context code generation (no agent history = fast)
+      // ── Generate OpenSCAD via embedded CADAM logic ────────────────────────────
       sendEvent({ type: 'log', text: '🎨 生成 OpenSCAD 代码…' })
-      const { aiPrompt } = await import('../cad-skill/src/ai-client.js')
-      const { CODE_GEN_PROMPT } = await import('../cad-skill/src/prompts.js')
-      const mainCfg = await readAiConfig()
+
       let code
       try {
-        code = await aiPrompt(toolInput.description, {
-          systemPrompt: CODE_GEN_PROMPT,
-          provider:     mainCfg.provider,
-          model:        mainCfg.model,
-          baseUrl:      mainCfg.baseUrl,
-          apiKey:       mainCfg.apiKey,
-          imageBase64:  state._imageBase64   || undefined,
-          imageMimeType: state._imageMimeType || undefined,
-        })
-        // Strip markdown fences if model wrapped it
-        code = code.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim()
+        code = await cadamGenerate(
+          toolInput.description,
+          state._imageBase64   || null,
+          state._imageMimeType || null,
+        )
       } catch (e) {
         return { ok: false, error: e.message, message: `Code generation failed: ${e.message}` }
       }
@@ -647,35 +787,24 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
 
       if (result.success) {
         await fs.mkdir(outputDir, { recursive: true })
-        // Save STL
         const stlB64 = result.exports?.stl_b64
         if (stlB64) {
           await fs.writeFile(path.join(outputDir, 'model.stl'), Buffer.from(stlB64, 'base64'))
         }
-        // Save renders
-        const renderPaths = {}
-        for (const [view, b64] of Object.entries(result.renders || {})) {
-          if (typeof b64 !== 'string') continue
-          const fp = path.join(outputDir, `model_${view}.png`)
-          await fs.writeFile(fp, Buffer.from(b64, 'base64'))
-          renderPaths[view] = fp
-        }
-        // Update project state
         state.cad = { generated: true, description: toolInput.description, metrics: result.metrics ?? {} }
         if (state.stage === 'cad') state.stage = 'firmware'
         await saveProjectState(sessionId, state)
-        // Save meta
         const meta = {
           id: sessionId, description: toolInput.description, timestamp: Date.now(),
           metrics: result.metrics ?? {}, printability: result.printability ?? {},
-          code, renders: Object.keys(renderPaths),
+          code, renders: [],
         }
         await fs.writeFile(path.join(outputDir, 'meta.json'), JSON.stringify(meta, null, 2))
-        sendEvent({ type: 'cad_update', sessionId, rounds: 1, metrics: result.metrics ?? {}, printability: result.printability ?? {}, renderViews: Object.keys(renderPaths) })
+        // renderViews omitted — rendered client-side via Three.js
+        sendEvent({ type: 'cad_update', sessionId, rounds: 1, metrics: result.metrics ?? {}, printability: result.printability ?? {} })
         sendEvent({ type: 'stage_update', stage: state.stage, state })
-        return { ok: true, metrics: result.metrics, message: `3D model executed successfully. 3D viewer updated.` }
+        return { ok: true, metrics: result.metrics, message: `3D model generated successfully. 3D viewer updated.` }
       }
-      // On error, tell the agent what went wrong so it can fix the code
       return { ok: false, error: result.error, message: `OpenSCAD error: ${result.error}\nFix the code and call generate_cad_model again with corrected code.` }
     }
 
@@ -745,6 +874,25 @@ async function executeAgentTool(toolName, toolInput, sessionId, sendEvent, cfg, 
       return { ok: true, message: 'Assessment questions shown to user. Wait for their answers before proceeding.' }
     }
 
+    case 'generate_assembly_guide': {
+      const guide = {
+        overview:     toolInput.overview     || '',
+        steps:        toolInput.steps        || [],
+        safety_notes: toolInput.safety_notes || [],
+        test_steps:   toolInput.test_steps   || [],
+        generated_at: Date.now(),
+      }
+      // Persist in project state
+      state.assembly = { ...(state.assembly || {}), guide }
+      if (state.stage === 'firmware') state.stage = 'assembly'
+      await saveProjectState(sessionId, state)
+      sendEvent({ type: 'assembly_guide', guide })
+      sendEvent({ type: 'stage_update', stage: state.stage, state })
+      const stepCount = guide.steps.length
+      const connCount = guide.steps.reduce((n, s) => n + (s.connections?.length ?? 0), 0)
+      return { ok: true, message: `Assembly guide generated: ${stepCount} steps, ${connCount} connections. Guide displayed in Assembly panel.` }
+    }
+
     default:
       throw new Error(`Unknown tool: ${toolName}`)
   }
@@ -767,6 +915,36 @@ function formatToolsBlock() {
   }).join('\n\n')
 }
 
+// Escape control chars only inside JSON string literals (state machine).
+// Structural whitespace between tokens is left untouched so JSON.parse still works.
+function escapeJsonStringLiterals(s) {
+  let result = '', inString = false, i = 0
+  while (i < s.length) {
+    const c = s[i]
+    if (c === '\\' && inString) { result += c + (s[i + 1] || ''); i += 2; continue }
+    if (c === '"') {
+      if (!inString) {
+        inString = true; result += c; i++; continue
+      }
+      // Inside a string: look ahead past whitespace to see if this quote is really closing
+      let j = i + 1
+      while (j < s.length && (s[j] === ' ' || s[j] === '\t' || s[j] === '\r' || s[j] === '\n')) j++
+      const next = s[j]
+      if (next === ':' || next === ',' || next === '}' || next === ']' || j >= s.length) {
+        // Structural char follows → this is a real closing quote
+        inString = false; result += c; i++; continue
+      }
+      // Non-structural char follows → unescaped quote inside a string value
+      result += '\\"'; i++; continue
+    }
+    if (inString && c === '\n') { result += '\\n'; i++; continue }
+    if (inString && c === '\r') { result += '\\r'; i++; continue }
+    if (inString && c === '\t') { result += '\\t'; i++; continue }
+    result += c; i++
+  }
+  return result
+}
+
 // Trim the growing tool-call context to prevent timeouts on later iterations.
 // Keeps the original user message + last N tool exchanges only.
 function trimToolContext(userInput, keepExchanges = 3) {
@@ -787,6 +965,7 @@ function callClaudeCLI(userMessage, appendSystemPrompt, timeoutMs = 300_000) {
 
     const child = spawn('claude', [
       '-p', '--output-format', 'text',
+      '--tools', '',
       '--append-system-prompt', appendSystemPrompt,
     ], { env })
     childProcs.add(child)
@@ -885,17 +1064,13 @@ ${formatToolsBlock()}`
     }
     let userInput = ctx ? `${ctx}Human: ${message.trim()}` : message.trim()
 
-    const agentCfg = await readAiConfig()
-    const useAPI = agentCfg.provider !== 'claude-cli' && agentCfg.apiKey
-    emit({ type: 'log', text: `正在启动 Agent… (${agentCfg.provider})` })
+    emit({ type: 'log', text: '正在启动 Claude Agent…' })
 
     for (let iter = 0; iter < 12; iter++) {
       emit({ type: 'log', text: `思考中… (第 ${iter + 1} 轮)` })
-      console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — calling ${useAPI ? agentCfg.provider + ' API' : 'claude -p'}`)
+      console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — calling claude -p`)
 
-      const resp = useAPI
-        ? await callAgentAPI(userInput, sysPrompt, agentCfg)
-        : await callClaudeCLI(userInput, sysPrompt)
+      const resp = await callClaudeCLI(userInput, sysPrompt)
       console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — response len=${resp.text?.length} isError=${resp.isError}`)
       console.log(`[agent:${sessionId.slice(0,8)}] iter ${iter + 1} — text: ${resp.text?.slice(0, 300)}`)
 
@@ -918,10 +1093,14 @@ ${formatToolsBlock()}`
       const jsonStr = text.slice(tcStart + TC_OPEN.length, tcEnd).trim()
       let toolCall
       try {
-        // Claude sometimes puts literal newlines inside JSON strings — escape them
-        const fixedJson = jsonStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
-        toolCall = JSON.parse(fixedJson)
-      } catch { emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 100)}` }); break }
+        // Try direct parse first (handles well-formatted JSON with structural newlines)
+        try {
+          toolCall = JSON.parse(jsonStr)
+        } catch {
+          // Fall back: escape control chars only inside string literals (state machine)
+          toolCall = JSON.parse(escapeJsonStringLiterals(jsonStr))
+        }
+      } catch { emit({ type: 'error', text: `工具解析失败: ${jsonStr.slice(0, 200)}` }); break }
 
       emit({ type: 'tool_call', tool: toolCall.name, input: toolCall.input })
 

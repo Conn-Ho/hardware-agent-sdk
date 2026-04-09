@@ -68,6 +68,35 @@ It **is** trying to replace:
 - Trial-and-error firmware debugging without simulation
 - Undirected assembly without real-time guidance
 
+## The Procurement Gap
+
+There's one more wall the current workflow hits: after the agent selects the right components, a human still has to go click "Buy" on DigiKey or Taobao.
+
+This is where **Web3/Web4 agent wallets** change the picture.
+
+An AI agent with a programmable payment primitive can close the full loop — from BOM generation to actual purchase order — autonomously, within policy limits set by the human:
+
+```
+Agent: confirms BOM → finds lowest price across 微雪/DFRobot/LCSC/DigiKey
+     → checks spend policy (user-set per-order limit: ¥500)
+     → places order via DigiKey Order API / Privacy.com virtual card
+     → returns tracking number
+Human: receives parts at the door
+```
+
+**Practical architecture today:**
+
+| Channel | Mechanism | Status |
+|---------|-----------|--------|
+| 中文渠道 (微雪/DFRobot/立创) | 虚拟卡 via Privacy.com MCP | 生产可用 |
+| 海外 API 服务 | x402 协议 + USDC (Coinbase AgentKit) | 生产可用 |
+| DigiKey / Mouser / Arrow | Order API + 预开企业账户 | 需注册 |
+| 通用兜底 | Privacy.com 虚拟 Visa，单笔限额 | 生产可用 |
+
+The human retains control through **spend policies, not approval dialogs** — you set the rules once, the agent operates within them.
+
+This is the natural next frontier: hardware agents that don't just design and debug, but also source and procure.
+
 ## The Competition Angle
 
 This is a **software project** that enables a new category of hardware development workflow. The deliverable is an SDK — installable, composable tools that any developer can add to their Claude Code environment.

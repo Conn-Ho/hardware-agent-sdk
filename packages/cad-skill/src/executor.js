@@ -58,13 +58,12 @@ async function executeNative(code, params = {}) {
 
     const stlBuf = await fs.readFile(stlFile)
     const metrics = await getMetrics(stlFile)
-    const renders = await renderViews(stlFile)
 
     return {
       success:      true,
       metrics,
       printability: getPrintability(metrics),
-      renders,
+      renders:      {},  // rendered client-side via Three.js
       exports:      { stl_b64: stlBuf.toString('base64') },
     }
   } finally {
@@ -127,62 +126,6 @@ function getPrintability(metrics) {
     is_watertight: metrics.is_valid ?? false,
     volume_mm3:    metrics.volume_mm3 ?? 0,
   }
-}
-
-// ── Render via OpenSCAD --render ───────────────────────────────────────────────
-
-async function renderViews(stlFile) {
-  // Use a Python/trimesh render for consistency
-  const script = `
-import trimesh, matplotlib, io, base64, json, sys
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import numpy as np
-mesh = trimesh.load(sys.argv[1], force='mesh')
-verts = np.array(mesh.vertices); faces = np.array(mesh.faces)
-mn=verts.min(0); mx=verts.max(0); c=(mn+mx)/2; hr=(mx-mn).max()/2*1.25
-VIEWS={'isometric':(25,45),'front':(0,0),'side':(0,90),'top':(90,0)}
-out={}
-for name,(elev,azim) in VIEWS.items():
-  fig=plt.figure(figsize=(4,4),dpi=100); ax=fig.add_subplot(111,projection='3d')
-  poly=Poly3DCollection(verts[faces],alpha=0.85,linewidths=0.3)
-  poly.set_facecolor([0.40,0.52,0.78]); poly.set_edgecolor([0.20,0.20,0.30])
-  ax.add_collection3d(poly)
-  ax.set_xlim(c[0]-hr,c[0]+hr); ax.set_ylim(c[1]-hr,c[1]+hr); ax.set_zlim(c[2]-hr,c[2]+hr)
-  ax.view_init(elev=elev,azim=azim); ax.set_axis_off(); ax.set_title(name,fontsize=9,pad=2)
-  buf=io.BytesIO(); plt.savefig(buf,format='png',bbox_inches='tight',facecolor='white'); plt.close(fig); buf.seek(0)
-  out[name]=base64.b64encode(buf.read()).decode()
-print(json.dumps(out))
-`
-  return new Promise(resolve => {
-    const child = spawn('python3', ['-c', script, stlFile])
-    let out = '', err = ''
-    const timer = setTimeout(() => { child.kill(); resolve({}) }, 30_000)
-    child.stdout.on('data', d => out += d)
-    child.stderr.on('data', d => err += d)
-    child.on('close', code => {
-      clearTimeout(timer)
-      if (code !== 0) {
-        if (/No module named/.test(err)) {
-          console.error('[executor] Python renders unavailable — install deps: pip3 install trimesh matplotlib')
-        } else if (err.trim()) {
-          console.error('[executor] render python error:', err.slice(0, 300))
-        }
-        resolve({})
-        return
-      }
-      try { resolve(JSON.parse(out.trim())) } catch {
-        console.error('[executor] render JSON parse failed:', out.slice(0, 200))
-        resolve({})
-      }
-    })
-    child.on('error', e => {
-      clearTimeout(timer)
-      console.error('[executor] failed to spawn python3 for renders:', e.message)
-      resolve({})
-    })
-  })
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

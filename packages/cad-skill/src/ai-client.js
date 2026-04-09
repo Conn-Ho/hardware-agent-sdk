@@ -62,11 +62,12 @@ export async function aiPrompt(prompt, opts = {}) {
 
 // ── claude -p subprocess ──────────────────────────────────────────────────────
 
-function claudeCliPrompt(prompt, { systemPrompt, model }) {
+function claudeCliPrompt(prompt, { systemPrompt, model, timeoutMs = 300_000 }) {
   return new Promise((resolve, reject) => {
     const args = ['-p', '--output-format', 'text']
     if (systemPrompt) args.push('--append-system-prompt', systemPrompt)
-    if (model)        args.push('--model', model)
+    // Only pass --model if it's a Claude model name (not gemini/gpt/etc from a stale config)
+    if (model && model.startsWith('claude')) args.push('--model', model)
 
     const env = { ...process.env }
     delete env.CLAUDECODE   // allow nested claude calls
@@ -74,18 +75,25 @@ function claudeCliPrompt(prompt, { systemPrompt, model }) {
     const child = spawn('claude', args, { env })
     let stdout = '', stderr = ''
 
+    const timer = setTimeout(() => {
+      child.kill()
+      reject(new Error(`claude -p timed out after ${timeoutMs / 1000}s`))
+    }, timeoutMs)
+
     child.stdin.write(prompt)
     child.stdin.end()
     child.stdout.on('data', d => { stdout += d })
     child.stderr.on('data', d => { stderr += d })
 
     child.on('close', code => {
+      clearTimeout(timer)
       if (code !== 0) reject(new Error(`claude -p exited ${code}: ${stderr.slice(0, 300)}`))
       else            resolve(stdout.trim())
     })
-    child.on('error', err =>
+    child.on('error', err => {
+      clearTimeout(timer)
       reject(new Error(`Failed to start claude CLI: ${err.message}. Is claude installed?`))
-    )
+    })
   })
 }
 
